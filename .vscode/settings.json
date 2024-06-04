@@ -3,7 +3,29 @@
   "[solidity]": {
     "editor.defaultFormatter": "JuanBlanco.solidity"
   },
-  "solidity.formatter": "forge",
+  "solidity.formatter": "prettier",
   "solidity.packageDefaultDependenciesContractsDirectory": "src",
-  "solidity.packageDefaultDependenciesDirectory": "lib"
+  "solidity.packageDefaultDependenciesDirectory": "lib",
+  "solidity.enabledAsYouTypeCompilationErrorCheck": true,
+  "solidity.validationDelay": 1500,
+  "solidity.linter": "solhint",
+  "solidity.solhintRules": {
+    "extends": "solhint:recommended",
+    "rules": {
+      "indent": ["error", 4],
+      "max-line-length": "off",
+      "no-empty-blocks": "off",
+      "func-order": "off",
+      "not-rely-on-time": "off",
+      "avoid-low-level-calls": "warn",
+      "compiler-version": ["error", "^0.8.0"],
+      "no-console": "warn"
+    },
+    "avoid-sha3": "warn"
+  },
+  "prettier.configPath": "./contracts/.prettierrc",
+  "solidity.remappings": [
+    "@openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/",
+    "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/"
+  ]
 }
