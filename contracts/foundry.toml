@@ -15,3 +15,7 @@ extra_output = ["storageLayout"]
 # scripting
 [rpc_endpoints]
 sepolia = "${RPC_URL}"
+gnosis = "${GNOSIS_MAINNET_RPC_URL}"
+
+[etherscan]
+gnosis = { key = "${GNOSIS_MAINNET_ETHERSCAN_API_KEY}" }
