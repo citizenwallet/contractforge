@@ -1,38 +1,72 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.20;
 
 import { Test, console } from "forge-std/Test.sol";
-import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-
 import { Utils } from "./utils/Utils.sol";
+
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { INonceManager } from "@account-abstraction/contracts/interfaces/INonceManager.sol";
+
+// 4337
+import { EntryPoint } from "@cloned/entrypoint/core/EntryPoint.sol";
+import { TokenEntryPoint } from "../src/4337/TokenEntryPoint.sol";
+import { Paymaster } from "../src/4337/Paymaster.sol";
+
 import { BadgeCollection } from "../src/BadgeCollection.sol";
 
 contract BadgeCollectionTest is Test {
 	BadgeCollection public badgeCollection;
+	EntryPoint public entryPoint;
+	TokenEntryPoint public tokenEntryPoint;
+	Paymaster public paymaster;
 	address public proxy;
 
 	Utils internal utils;
 
 	address payable[] internal users;
+	address internal sponsor;
 	address internal owner;
 	address internal admin;
 
 	function setUp() public {
 		utils = new Utils();
-		users = utils.createUsers(2);
-		owner = users[0];
+		users = utils.createUsers(3);
+		sponsor = users[0];
+		vm.label(sponsor, "Sponsor");
+		owner = users[1];
 		vm.label(owner, "Owner");
-		admin = users[1];
+		admin = users[2];
 		vm.label(admin, "Admin");
 
-		address implementation = address(new BadgeCollection());
+		vm.startPrank(owner);
 
+		// deploy BadgeCollection
+		address implementation = address(new BadgeCollection());
 		bytes memory data = abi.encodeCall(BadgeCollection.initialize, owner);
+
 		proxy = address(new ERC1967Proxy(implementation, data));
 
 		badgeCollection = BadgeCollection(proxy);
 
-		vm.startPrank(owner);
+		// deploy 4337
+		entryPoint = new EntryPoint();
+
+		implementation = address(new Paymaster());
+		data = abi.encodeCall(Paymaster.initialize, (owner, sponsor));
+
+		proxy = address(new ERC1967Proxy(implementation, data));
+
+		paymaster = Paymaster(proxy);
+
+		implementation = address(new TokenEntryPoint(INonceManager(address(entryPoint))));
+		address[] memory whitelisted = new address[](1);
+		whitelisted[0] = address(badgeCollection);
+
+		data = abi.encodeCall(TokenEntryPoint.initialize, (owner, address(paymaster), whitelisted));
+		proxy = address(new ERC1967Proxy(implementation, data));
+
+		tokenEntryPoint = TokenEntryPoint(proxy);
+
 		badgeCollection.grantRole(badgeCollection.BADGE_COLLECTION_ADMIN_ROLE(), admin);
 		badgeCollection.grantRole(badgeCollection.BADGE_ADMIN_ROLE(), admin);
 		vm.stopPrank();
@@ -74,13 +108,13 @@ contract BadgeCollectionTest is Test {
 		) = badgeCollection.get(id);
 
 		// check that they are equal
-        assertEq(returnedClaimFrom, claimFrom);
-        assertEq(returnedClaimTo, claimTo);
-        assertEq(returnedMaxClaim, maxClaim);
-        assertEq(returnedUpdateUntil, updateUntil);
-        assertEq(returnedUri, _uri);
+		assertEq(returnedClaimFrom, claimFrom);
+		assertEq(returnedClaimTo, claimTo);
+		assertEq(returnedMaxClaim, maxClaim);
+		assertEq(returnedUpdateUntil, updateUntil);
+		assertEq(returnedUri, _uri);
 
-        // check that the uri is set
-        assertEq(badgeCollection.uri(id), _uri);
+		// check that the uri is set
+		assertEq(badgeCollection.uri(id), _uri);
 	}
 }

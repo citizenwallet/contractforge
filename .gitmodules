@@ -4,12 +4,12 @@
 [submodule "contracts/lib/openzeppelin-contracts"]
 	path = contracts/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
-[submodule "contracts/lib/openzeppelin-foundry-upgrades"]
-	path = contracts/lib/openzeppelin-foundry-upgrades
-	url = https://github.com/OpenZeppelin/openzeppelin-foundry-upgrades
 [submodule "contracts/lib/account-abstraction"]
 	path = contracts/lib/account-abstraction
 	url = https://github.com/eth-infinitism/account-abstraction
-[submodule "contracts/lib/account-abstraction.git"]
-	path = contracts/lib/account-abstraction.git
-	url = https://github.com/eth-infinitism/account-abstraction.git
+[submodule "contracts/EntryPoint/lib/forge-std"]
+	path = contracts/EntryPoint/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "contracts/lib/openzeppelin-foundry-upgrades"]
+	path = contracts/lib/openzeppelin-foundry-upgrades
+	url = https://github.com/OpenZeppelin/openzeppelin-foundry-upgrades

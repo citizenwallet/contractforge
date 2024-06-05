@@ -13,7 +13,7 @@
         "no-console": "warn",
         "compiler-version": [
             "error",
-            "^0.8.0"
+            "^0.8.20"
         ]
     }
 }

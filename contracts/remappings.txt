@@ -1,2 +1,5 @@
 @openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/
 @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
+@account-abstraction/contracts/=lib/account-abstraction/contracts/
+@cloned/entrypoint/=cloned/EntryPoint/src/
+@openzeppelin-no-upgrade/contracts/=lib/openzeppelin-contracts/contracts/
