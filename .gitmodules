@@ -10,3 +10,6 @@
 [submodule "contracts/lib/account-abstraction"]
 	path = contracts/lib/account-abstraction
 	url = https://github.com/eth-infinitism/account-abstraction
+[submodule "contracts/lib/account-abstraction.git"]
+	path = contracts/lib/account-abstraction.git
+	url = https://github.com/eth-infinitism/account-abstraction.git
