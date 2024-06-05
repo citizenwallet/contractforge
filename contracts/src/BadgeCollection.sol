@@ -22,6 +22,7 @@ contract BadgeCollection is
 	bytes32 internal constant NULL = "";
 	bytes32 public constant BADGE_COLLECTION_ADMIN_ROLE = keccak256("BADGE_COLLECTION_ADMIN_ROLE");
 	bytes32 public constant BADGE_ADMIN_ROLE = keccak256("BADGE_ADMIN_ROLE");
+	bytes32 public constant BADGE_CLAIM_ADMIN_ROLE = keccak256("BADGE_CLAIM_ADMIN_ROLE");
 
 	struct Badge {
 		uint48 claimFrom;
@@ -49,6 +50,7 @@ contract BadgeCollection is
 
 	// Custom errors
 	error NotManager(address account);
+	error NotClaimAdmin(address account);
 	error Exists(uint256 id);
 	error DoesNotExist(uint256 id);
 	error InvalidClaimRange(uint48 claimFrom, uint48 claimTo);
@@ -64,6 +66,11 @@ contract BadgeCollection is
 
 	modifier onlyManager() {
 		if (!hasRole(BADGE_ADMIN_ROLE, msg.sender)) revert NotManager(msg.sender);
+		_;
+	}
+
+	modifier onlyClaimAdmin() {
+		if (!hasRole(BADGE_CLAIM_ADMIN_ROLE, msg.sender)) revert NotClaimAdmin(msg.sender);
 		_;
 	}
 
@@ -102,6 +109,7 @@ contract BadgeCollection is
 
 		_grantRole(BADGE_COLLECTION_ADMIN_ROLE, _owner);
 		_grantRole(BADGE_ADMIN_ROLE, _owner);
+		_grantRole(BADGE_CLAIM_ADMIN_ROLE, _owner);
 	}
 
 	function create(
@@ -158,6 +166,17 @@ contract BadgeCollection is
 		claims[id][msg.sender]++;
 
 		_mint(msg.sender, id, 1, "");
+	}
+
+	function claimFor(uint256 id, address to) external badgeExists(id) onlyClaimAdmin {
+		if (block.timestamp < badges[id].claimFrom) revert BeforeClaimPeriod();
+		if (block.timestamp > badges[id].claimTo) revert AfterClaimPeriod();
+		if (badges[id].archived) revert BadgeAlreadyArchived(id);
+		if (badges[id].maxClaim > 0 && claims[id][to] >= badges[id].maxClaim) revert MaximumClaimsReached(id);
+
+		claims[id][to]++;
+
+		_mint(to, id, 1, "");
 	}
 
 	function get(
