@@ -13,3 +13,6 @@
 [submodule "contracts/lib/openzeppelin-foundry-upgrades"]
 	path = contracts/lib/openzeppelin-foundry-upgrades
 	url = https://github.com/OpenZeppelin/openzeppelin-foundry-upgrades
+[submodule "contracts/lib/safe-smart-account"]
+	path = contracts/lib/safe-smart-account
+	url = https://github.com/safe-global/safe-smart-account
