@@ -18,7 +18,7 @@
       "func-order": "off",
       "not-rely-on-time": "off",
       "avoid-low-level-calls": "warn",
-      "compiler-version": ["error", "^0.8.20"],
+      "compiler-version": ["error", "^0.8.23"],
       "no-console": "warn"
     },
     "avoid-sha3": "warn"
@@ -30,5 +30,6 @@
     "@account-abstraction/contracts/=/lib/account-abstraction/contracts/",
     "@cloned/entrypoint/=/cloned/EntryPoint/src/",
     "@openzeppelin-no-upgrade/contracts/=lib/openzeppelin-contracts/contracts/",
-  ]
+  ],
+  "solidity.compileUsingRemoteVersion": "v0.8.23+commit.f704f362"
 }

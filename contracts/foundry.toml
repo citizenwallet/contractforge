@@ -4,7 +4,7 @@ out = "out"
 libs = ["lib"]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
-solc = "0.8.20"
+solc = "0.8.23"
 
 # oppenzeppelin
 ffi = true
@@ -19,3 +19,7 @@ gnosis = "${GNOSIS_MAINNET_RPC_URL}"
 
 [etherscan]
 gnosis = { key = "${GNOSIS_MAINNET_ETHERSCAN_API_KEY}" }
+
+[profile.dependencies]
+"@account-abstraction" = { git = "https://github.com/eth-infinitism/account-abstraction.git", tag = "v0.7.0" }
+"@safe-modules" = { git = "https://github.com/safe-global/safe-modules.git", tag = "4337/v0.3.0-1" }
