@@ -13,7 +13,8 @@ import { SafeProxy } from "safe-smart-account/contracts/proxies/SafeProxy.sol";
 import { TokenCallbackHandler } from "safe-smart-account/contracts/handler/TokenCallbackHandler.sol";
 
 // Safe 4337 Module
-import { Safe4337Module } from "safe-modules/modules/4337/contracts/Safe4337Module.sol";
+import { Safe4337Module } from "../src/Modules/Safe4337Module.sol";
+import { SafeTxConfig } from "../script/utils/SafeTxConfig.s.sol";
 
 // 4337
 import { EntryPoint } from "@cloned/Entrypoint/src/core/EntryPoint.sol";
@@ -23,6 +24,8 @@ import { Paymaster } from "../src/ERC4337/Paymaster.sol";
 import { BadgeCollection } from "../src/BadgeCollection.sol";
 
 contract TokenEntryPointTest is Test {
+	error SafeTxFailure(bytes reason);
+
 	Safe public singleton;
 	Safe public safe;
 	SafeProxy public safeProxy;
@@ -43,6 +46,44 @@ contract TokenEntryPointTest is Test {
 	address internal owner;
 	address internal admin;
 	address internal safeDeployer;
+
+	SafeTxConfig safeTxConfig = new SafeTxConfig();
+	SafeTxConfig.Config config;
+
+	function getTransactionHash(address _to, bytes memory _data) public view returns (bytes32) {
+		return
+			safe.getTransactionHash(
+				_to,
+				config.value,
+				_data,
+				config.operation,
+				config.safeTxGas,
+				config.baseGas,
+				config.gasPrice,
+				config.gasToken,
+				config.refundReceiver,
+				safe.nonce()
+			);
+	}
+
+	function sendSafeTx(address _to, bytes memory _data, bytes memory sig) public {
+		try
+			safe.execTransaction(
+				_to,
+				config.value,
+				_data,
+				config.operation,
+				config.safeTxGas,
+				config.baseGas,
+				config.gasPrice,
+				config.gasToken,
+				config.refundReceiver,
+				sig //sig
+			)
+		{} catch (bytes memory reason) {
+			revert SafeTxFailure(reason);
+		}
+	}
 
 	function setUp() public {
 		utils = new Utils();
@@ -72,12 +113,29 @@ contract TokenEntryPointTest is Test {
 		console.log(address(singleton));
 		console.log(address(safeProxy));
 		console.log(address(safe));
+		console.log(address(module));
 
 		address[] memory owners = new address[](1);
 		owners[0] = owner;
 		safe.setup(owners, 1, address(0), bytes(""), address(handler), address(0), 0, payable(address(owner)));
 
-		safe.enableModule(address(module));
+		console.log("1");
+
+		config = safeTxConfig.run(owner);
+
+		bytes32 txHash = getTransactionHash(
+			address(safe),
+			abi.encodeWithSignature("enableModule(address)", address(module))
+		);
+		(uint8 v, bytes32 r, bytes32 s) = vm.sign(vm.envUint("SAFE_OWNER_PRIVATE_KEY"), txHash);
+		sendSafeTx(
+			address(safe),
+			abi.encodeWithSignature("enableModule(address)", address(module)),
+			abi.encodePacked(r, s, v)
+		);
+
+
+		console.log("2");
 
 		// deploy BadgeCollection
 		address implementation = address(new BadgeCollection());
@@ -109,6 +167,8 @@ contract TokenEntryPointTest is Test {
 		badgeCollection.grantRole(badgeCollection.BADGE_COLLECTION_ADMIN_ROLE(), admin);
 		badgeCollection.grantRole(badgeCollection.BADGE_ADMIN_ROLE(), admin);
 		vm.stopPrank();
+
+		console.log("3");
 	}
 
 	function testOwner() public view {

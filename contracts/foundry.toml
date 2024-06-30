@@ -4,6 +4,8 @@ out = "out"
 libs = ["lib"]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+optimize = true
+optimizer_runs = 200
 solc = "0.8.23"
 
 # oppenzeppelin
@@ -21,5 +23,6 @@ gnosis = "${GNOSIS_MAINNET_RPC_URL}"
 gnosis = { key = "${GNOSIS_MAINNET_ETHERSCAN_API_KEY}" }
 
 [profile.dependencies]
+"@openzepplin-contracts" = { git = "https://github.com/OpenZeppelin/openzeppelin-contracts.git", tag = "v5.0.1" }
+"@openzepplin-contracts-upgradeable" = { git = "https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable.git", tag = "v5.0.1" }
 "@account-abstraction" = { git = "https://github.com/eth-infinitism/account-abstraction.git", tag = "v0.7.0" }
-"@safe-modules" = { git = "https://github.com/safe-global/safe-modules.git", tag = "4337/v0.3.0-1" }
