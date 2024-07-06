@@ -94,7 +94,9 @@ contract TokenEntryPointTest is Test {
 		vm.label(owner, "Owner");
 		admin = users[2];
 		vm.label(admin, "Admin");
-		safeDeployer = users[3];
+
+		uint256 safeDeployerPK = 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
+		safeDeployer = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
 		vm.label(safeDeployer, "Safe Deployer");
 
 		vm.startPrank(owner);
@@ -127,7 +129,9 @@ contract TokenEntryPointTest is Test {
 			address(safe),
 			abi.encodeWithSignature("enableModule(address)", address(module))
 		);
-		(uint8 v, bytes32 r, bytes32 s) = vm.sign(vm.envUint("SAFE_OWNER_PRIVATE_KEY"), txHash);
+		console.log("1 1");
+		(uint8 v, bytes32 r, bytes32 s) = vm.sign(safeDeployerPK, txHash);
+		console.log("1 2");
 		sendSafeTx(
 			address(safe),
 			abi.encodeWithSignature("enableModule(address)", address(module)),
