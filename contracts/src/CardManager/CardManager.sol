@@ -25,13 +25,16 @@ contract CardManager is IWhitelist {
     constructor(
         IEntryPoint _entryPoint,
         ITokenEntryPoint _tokenEntryPoint,
-        address[] memory _whitelistAddresses
+        address[] memory _whitelistAddresses,
+        address _owner
     ) {
         cardImplementation = new Card(_entryPoint, _tokenEntryPoint);
         _whitelistVersion = 0;
         _updateWhiteList(_whitelistAddresses);
-        owner = msg.sender;
+        owner = _owner;
     }
+
+    // TODO: move entrypoint and token entrypoint out of constructor
 
     /**
      * @dev Calculates the hash value for a given card.

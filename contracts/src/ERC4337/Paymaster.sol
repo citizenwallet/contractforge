@@ -13,8 +13,7 @@ import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/Mes
 import { _packValidationData } from "account-abstraction/core/Helpers.sol";
 import { IPaymaster } from "account-abstraction/interfaces/IPaymaster.sol";
 import { INonceManager } from "account-abstraction/interfaces/INonceManager.sol";
-import { UserOperationLib } from "account-abstraction/core/UserOperationLib.sol";
-import { PackedUserOperation } from "account-abstraction/interfaces/PackedUserOperation.sol";
+import { UserOperation, UserOperationLib } from "account-abstraction/interfaces/UserOperation.sol";
 
 /**
  * A sample paymaster that uses external service to decide whether to pay for the UserOp.
@@ -29,7 +28,7 @@ import { PackedUserOperation } from "account-abstraction/interfaces/PackedUserOp
  */
 contract Paymaster is IPaymaster, Initializable, OwnableUpgradeable, UUPSUpgradeable {
 	using ECDSA for bytes32;
-	using UserOperationLib for PackedUserOperation;
+	using UserOperationLib for UserOperation;
 
 	uint256 private constant VALID_TIMESTAMP_OFFSET = 20;
 
@@ -70,7 +69,7 @@ contract Paymaster is IPaymaster, Initializable, OwnableUpgradeable, UUPSUpgrade
 	bytes4 private executeSelector;
 	bytes4 private executeBatchSelector;
 
-	function pack(PackedUserOperation calldata userOp) internal pure returns (bytes memory ret) {
+	function pack(UserOperation calldata userOp) internal pure returns (bytes memory ret) {
 		// lighter signature scheme. must match UserOp.ts#packUserOp
 		address sender = userOp.getSender();
 
@@ -90,7 +89,7 @@ contract Paymaster is IPaymaster, Initializable, OwnableUpgradeable, UUPSUpgrade
 	 * which will carry the signature itself.
 	 */
 	function getHash(
-		PackedUserOperation calldata userOp,
+		UserOperation calldata userOp,
 		uint48 validUntil,
 		uint48 validAfter
 	) public view returns (bytes32) {
@@ -115,7 +114,7 @@ contract Paymaster is IPaymaster, Initializable, OwnableUpgradeable, UUPSUpgrade
 	 * paymasterAndData[84:] : signature
 	 */
 	function validatePaymasterUserOp(
-		PackedUserOperation calldata userOp,
+		UserOperation calldata userOp,
 		bytes32 userOpHash,
 		uint256 maxCost
 	) public view returns (bytes memory context, uint256 validationData) {
@@ -152,7 +151,8 @@ contract Paymaster is IPaymaster, Initializable, OwnableUpgradeable, UUPSUpgrade
 		signature = paymasterAndData[SIGNATURE_OFFSET:];
 	}
 
-	function postOp(PostOpMode mode, bytes calldata context, uint256 actualGasCost, uint256 actualUserOpFeePerGas) external view {}
+	// function postOp(PostOpMode mode, bytes calldata context, uint256 actualGasCost, uint256 actualUserOpFeePerGas) external view {}
+	function postOp(PostOpMode mode, bytes calldata context, uint256 actualGasCost) external {}
 
 	function _authorizeUpgrade(address newImplementation) internal view override onlyOwner {
 		(newImplementation);

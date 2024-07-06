@@ -12,8 +12,7 @@ import { ValidationData, _parseValidationData } from "account-abstraction/core/H
 import { SenderCreator } from "account-abstraction/core/SenderCreator.sol";
 import { IPaymaster } from "account-abstraction/interfaces/IPaymaster.sol";
 import { INonceManager } from "account-abstraction/interfaces/INonceManager.sol";
-import { UserOperationLib } from "account-abstraction/core/UserOperationLib.sol";
-import { PackedUserOperation } from "account-abstraction/interfaces/PackedUserOperation.sol";
+import { UserOperation, UserOperationLib } from "account-abstraction/interfaces/UserOperation.sol";
 
 import { ITokenEntryPoint } from "./interfaces/ITokenEntryPoint.sol";
 
@@ -40,7 +39,7 @@ contract TokenEntryPoint is
 	UUPSUpgradeable
 {
 	using ECDSA for bytes32;
-	using UserOperationLib for PackedUserOperation;
+	using UserOperationLib for UserOperation;
 
 	SenderCreator private senderCreator;
 
@@ -103,7 +102,7 @@ contract TokenEntryPoint is
 	 * @notice Each operation is validated for nonce, account, and paymaster signature before execution.
 	 */
 	function handleOps(
-		PackedUserOperation[] calldata ops,
+		UserOperation[] calldata ops,
 		address payable beneficiary // kept to make sure we keep the same function signature
 	) public nonReentrant {
 		(beneficiary);
@@ -112,7 +111,7 @@ contract TokenEntryPoint is
 		uint len = ops.length;
 		for (uint i = 0; i < len; ) {
 			// handle each op
-			PackedUserOperation calldata op = ops[i];
+			UserOperation calldata op = ops[i];
 
 			address sender = op.getSender();
 
@@ -146,7 +145,7 @@ contract TokenEntryPoint is
 	 * Requirements:
 	 * - The nonce in the user operation must match the nonce in the account.
 	 */
-	function _validateNonce(PackedUserOperation calldata op, address sender, uint192 key) internal virtual {
+	function _validateNonce(UserOperation calldata op, address sender, uint192 key) internal virtual {
 		uint256 nonce = getNonce(sender, key);
 
 		// the nonce in the user op must match the nonce in the account
@@ -158,7 +157,7 @@ contract TokenEntryPoint is
 	 * @param op The user operation to validate.
 	 * @param sender The address of the sender of the user operation.
 	 */
-	function _validateAccount(PackedUserOperation calldata op, address sender, uint64 seq) internal virtual {
+	function _validateAccount(UserOperation calldata op, address sender, uint64 seq) internal virtual {
 		// call the initCode
 		if (seq == 0 && !_contractExists(sender)) {
 			_initAccount(op, sender);
@@ -174,7 +173,7 @@ contract TokenEntryPoint is
 	 * @dev Initializes a new account using the provided UserOperation.
 	 * @param op The UserOperation which contains the initCode.
 	 */
-	function _initAccount(PackedUserOperation calldata op, address sender) internal virtual {
+	function _initAccount(UserOperation calldata op, address sender) internal virtual {
 		bytes calldata initCode = op.initCode;
 
 		// initCode must be at least 20 bytes long, and the first 20 bytes must be the factory address
@@ -199,7 +198,7 @@ contract TokenEntryPoint is
 	 * @dev Validates the paymaster address and data of a user operation.
 	 * @param op The user operation to validate.
 	 */
-	function _validatePaymasterUserOp(PackedUserOperation calldata op) internal virtual {
+	function _validatePaymasterUserOp(UserOperation calldata op) internal virtual {
 		address paymasterAddress = _getPaymaster(op);
 
 		// verify paymasterAndData signature
@@ -228,7 +227,7 @@ contract TokenEntryPoint is
 		aggregator = data.aggregator;
 	}
 
-	function _getPaymaster(PackedUserOperation calldata op) internal virtual returns (address) {
+	function _getPaymaster(UserOperation calldata op) internal virtual returns (address) {
 		bytes calldata paymasterAndData = op.paymasterAndData;
 
 		// paymasterAndData must be at least 20 bytes long, and the first 20 bytes must be the paymaster address
@@ -250,7 +249,7 @@ contract TokenEntryPoint is
 	 * @dev Validates the call data in the user operation to make sure that only the functions we chose are allowed and that only whitelisted smart contracts can be called.
 	 * @param op The user operation to validate.
 	 */
-	function _validateCallData(PackedUserOperation calldata op, address sender) internal virtual {
+	function _validateCallData(UserOperation calldata op, address sender) internal virtual {
 		// callData must be at least 4 bytes long, and the first 4 bytes must be the function selector
 		require(op.callData.length >= 4, "AA26 invalid calldata");
 
@@ -343,7 +342,7 @@ contract TokenEntryPoint is
 	 * generate a request Id - unique identifier for this request.
 	 * the request ID is a hash over the content of the userOp (except the signature), the entrypoint and the chainid.
 	 */
-	function getUserOpHash(PackedUserOperation calldata userOp) public view returns (bytes32) {
+	function getUserOpHash(UserOperation calldata userOp) public view returns (bytes32) {
 		return keccak256(abi.encode(userOp.hash(), address(this), block.chainid));
 	}
 
