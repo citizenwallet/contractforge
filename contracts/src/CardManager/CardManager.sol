@@ -56,7 +56,7 @@ contract CardManager is IWhitelist {
 	 * @return The calculated hash value.
 	 */
 	function getCardHash(uint256 serial) public view returns (bytes32) {
-		return keccak256(abi.encodePacked(serial, block.chainid, address(this)));
+		return keccak256(abi.encodePacked(serial, address(this)));
 	}
 
 	function createCard(bytes32 cardHash) public returns (Card ret) {
