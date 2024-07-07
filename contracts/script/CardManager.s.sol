@@ -15,31 +15,37 @@ contract CardManagerDeploy is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address owner = vm.envAddress("OWNER_ADDRESS");
         address entrypoint = vm.envAddress("ERC4337_ENTRYPOINT");
-        // address baseTokenEntrypoint = vm.envAddress("ERC4337_TOKEN_ENTRYPOINT_BASE");
-        address gnosisTokenEntrypoint = vm.envAddress("ERC4337_TOKEN_ENTRYPOINT_GNOSIS");
+        // address tokenEntrypoint = vm.envAddress("ERC4337_TOKEN_ENTRYPOINT_BASE"); // BASE
+        address tokenEntrypoint = vm.envAddress("ERC4337_TOKEN_ENTRYPOINT_GNOSIS"); // GNOSIS
         vm.startBroadcast(deployerPrivateKey);
 
         address[] memory whitelist = new address[](0);
 
         Create2 deployer = Create2(vm.envAddress("CREATE2_FACTORY_ADDRESS"));
-        bytes memory bytecode = getCardManagerBytecode(IEntryPoint(entrypoint), ITokenEntryPoint(gnosisTokenEntrypoint), whitelist, owner);
+        bytes memory bytecode = getCardManagerBytecode(owner);
 
         bytes32 salt = keccak256(abi.encodePacked("REGEN_VILLAGE_CARD_MANAGER_2"));
 
         address cm = deployer.deploy(salt, bytecode);
 
+        if (cm == address(0)) {
+            console.log("CardManager deployment failed");
+
+            vm.stopBroadcast();
+            return;
+        }
+
         console.log("CardManager created at: ", address(cm));
+
+        CardManager(cm).initialize(IEntryPoint(entrypoint), ITokenEntryPoint(tokenEntrypoint), whitelist);
 
         vm.stopBroadcast();
     }
 
     function getCardManagerBytecode(
-        IEntryPoint _entryPoint,
-        ITokenEntryPoint _tokenEntryPoint,
-        address[] memory _whitelistAddresses,
         address _owner
     ) public pure returns (bytes memory) {
         bytes memory bytecode = type(CardManager).creationCode;
-        return abi.encodePacked(bytecode, abi.encode(_entryPoint, _tokenEntryPoint, _whitelistAddresses, _owner));
+        return abi.encodePacked(bytecode, abi.encode(_owner));
     }
 }
