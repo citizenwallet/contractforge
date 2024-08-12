@@ -26,3 +26,4 @@ gnosis = { key = "${GNOSIS_MAINNET_ETHERSCAN_API_KEY}" }
 "@openzepplin-contracts" = { git = "https://github.com/OpenZeppelin/openzeppelin-contracts.git", tag = "v5.0.1" }
 "@openzepplin-contracts-upgradeable" = { git = "https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable.git", tag = "v5.0.1" }
 "@account-abstraction" = { git = "https://github.com/eth-infinitism/account-abstraction.git", tag = "v0.6.0" }
+"safe-contracts" = { git = "https://github.com/safe-global/safe-smart-account.git", tag = "v1.4.1-1" }
