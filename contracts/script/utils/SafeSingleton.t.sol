@@ -9,7 +9,7 @@ import "../../src/utils/SafeSuiteLib.sol";
  * https://github.com/safe-global/safe-deployments
  */
 abstract contract SafeSingletonFixtureTest is Test {
-    address constant SAFE_SINGLETON_ADDRESS = 0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7;
+    address public constant SAFE_SINGLETON_ADDRESS = 0x914d7Fec6aaC8cd542e72Bca78B30650d45643d7;
     bytes constant MAINNET_SAFE_SINGLETON_DEPLOYED_CODE = bytes(
         hex"7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf3"
     );

@@ -55,6 +55,9 @@ contract DeploymentScript is NetworkUtilsScript {
         payable
         returns (address[] memory safes)
     {
+        // get network and msg sender
+        getNetworkAndMsgSender();
+
         // deploy safes and transfer msg.value equally to each safe
         safes = new address[](numSafe);
         for (uint256 i = 0; i < safes.length; i++) {
@@ -71,6 +74,8 @@ contract DeploymentScript is NetworkUtilsScript {
             // return the safe instance
             emit log_named_address("Safe", safes[i]);
         }
+
+        vm.stopBroadcast();
     }
 
     /**
