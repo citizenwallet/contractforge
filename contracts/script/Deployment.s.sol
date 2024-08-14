@@ -25,31 +25,13 @@ contract DeploymentScript is NetworkUtilsScript {
      * @dev Create safes with a deployed faucet module
      * @param numSafe number of Safe instances to be created
      * @param fundValue ether value in finney (1e15 wei) to send to each Safe
-     */
-    function createSafesAndModule(uint256 numSafe, uint256 fundValue) external payable {
-        // get network and msg sender
-        getNetworkAndMsgSender();
-
-        // deploy module
-        address module = deployModule();
-
-        // deploy safes and transfer msg.value equally to each safe
-        createSafesWithModule(numSafe, fundValue, module);
-
-        vm.stopBroadcast();
-    }
-
-    /**
-     * @dev Create safes with a deployed faucet module
-     * @param numSafe number of Safe instances to be created
-     * @param fundValue ether value in finney (1e15 wei) to send to each Safe
-     * @param counterModule address of faucet module
+     * @param safeModule address of faucet module
      * @return safes addresses of created safe instances
      */
     function createSafesWithModule(
         uint256 numSafe,
         uint256 fundValue,
-        address counterModule
+        address safeModule
     )
         public
         payable
@@ -68,7 +50,7 @@ contract DeploymentScript is NetworkUtilsScript {
             payable(safes[i]).transfer(fundValue * 1e15);
 
             // add module to Safe proxy
-            bytes memory enableModuleData = abi.encodeWithSelector(ModuleManager.enableModule.selector, counterModule);
+            bytes memory enableModuleData = abi.encodeWithSelector(ModuleManager.enableModule.selector, safeModule);
             prepareSafeTx(Safe(payable(safes[i])), 0, enableModuleData);
 
             // return the safe instance
@@ -76,16 +58,6 @@ contract DeploymentScript is NetworkUtilsScript {
         }
 
         vm.stopBroadcast();
-    }
-
-    /**
-     * @dev deploy module for safes
-     * @return counterModule address of faucet module
-     */
-    function deployModule() public returns (address counterModule) {
-        // deploy faucet module
-        counterModule = deployCode("CounterModule.sol:CounterModule");
-        emit log_named_address("Counter module", counterModule);
     }
 
     /**

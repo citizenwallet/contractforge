@@ -23,7 +23,7 @@ contract CounterModuleTest is Test {
 		deploymentScript.fundDeployer();
 
 		// Deploy the counter module
-		counterModule = CounterModule(deploymentScript.deployModule());
+		counterModule = new CounterModule();
 		safes = deploymentScript.createSafesWithModule(3, 300, address(counterModule));
 	}
 
