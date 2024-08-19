@@ -50,8 +50,42 @@ contract CounterModule is CompatibilityFallbackHandler {
         _;
     }
 
+    /**
+     * @dev This is a helper function to call the increment function from the CounterModule for test purposes
+     * @param safeAddr The address of the Safe contract
+     * @return bool Whether the transaction was successful
+     */
+    function callIncrement(address safeAddr) external onlyWhenModuleIsEnabled(safeAddr) returns (bool) {
+        // Prepare the transaction data for the increment function
+		bytes memory data = abi.encodeWithSignature("increment(address)", safeAddr);
+		
+		return Safe(payable(safeAddr)).execTransactionFromModule(
+			address(this),
+			0,
+			data,
+			Enum.Operation.Call
+		);
+    }
+
     function increment(address safeAddr) external onlyWhenModuleIsEnabled(safeAddr) {
         count[safeAddr] += 1;
+    }
+
+    /**
+     * @dev This is a helper function to call the decrement function from the CounterModule for test purposes
+     * @param safeAddr The address of the Safe contract
+     * @return bool Whether the transaction was successful
+     */
+    function callDecrement(address safeAddr) external onlyWhenModuleIsEnabled(safeAddr) returns (bool) {
+        // Prepare the transaction data for the decrement function
+		bytes memory data = abi.encodeWithSignature("decrement(address)", safeAddr);
+		
+		return Safe(payable(safeAddr)).execTransactionFromModule(
+			address(this),
+			0,
+			data,
+			Enum.Operation.Call
+		);
     }
 
     function decrement(address safeAddr) external onlyWhenModuleIsEnabled(safeAddr) {

@@ -2,18 +2,20 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
-import { ModuleManager } from "safe-smart-account/contracts/Safe.sol";
+import { ModuleManager, Safe, Enum } from "safe-smart-account/contracts/Safe.sol";
 import { CounterModule, CountIsZero } from "../src/Modules/CounterModule.sol";
 import { SafeSuiteSetupScript } from "../script/SafeSuiteSetup.s.sol";
 import { DeploymentScript } from "../script/Deployment.s.sol";
 
 contract CounterModuleTest is Test {
 	CounterModule public counterModule;
-    address public safeSingleton;
+	address public safeSingleton;
 	address[] public safes;
 
+	uint256 internal deployerPrivateKey;
+
 	function setUp() public {
-        // Deploy the safe singleton
+		// Deploy the safe singleton
 		SafeSuiteSetupScript setupScript = new SafeSuiteSetupScript();
 		setupScript.run();
 
@@ -25,6 +27,8 @@ contract CounterModuleTest is Test {
 		// Deploy the counter module
 		counterModule = new CounterModule();
 		safes = deploymentScript.createSafesWithModule(3, 300, address(counterModule));
+
+		bool isEnabled = ModuleManager(payable(safes[0])).isModuleEnabled(address(counterModule));
 	}
 
 	function testModuleIsEnabled() public {
@@ -35,25 +39,31 @@ contract CounterModuleTest is Test {
 	}
 
 	function testInitialCount() public {
-	    uint256 initialCount = counterModule.getCount(safes[0]);
-	    assertEq(initialCount, 0);
+		uint256 initialCount = counterModule.getCount(safes[0]);
+		assertEq(initialCount, 0);
 	}
 
 	function testIncrement() public {
-	    counterModule.increment(safes[0]);
-	    uint256 newCount = counterModule.getCount(safes[0]);
-	    assertEq(newCount, 1);
+		// increment through module
+		counterModule.callIncrement(safes[0]);
+
+		// Check the final count
+		uint256 newCount = counterModule.getCount(safes[0]);
+		assertEq(newCount, 1, "Count should be incremented to 1");
 	}
 
 	function testDecrement() public {
-	    counterModule.increment(safes[0]); // increment first to avoid underflow
-	    counterModule.decrement(safes[0]);
-	    uint256 newCount = counterModule.getCount(safes[0]);
-	    assertEq(newCount, 0);
+		// increment through module
+		counterModule.callIncrement(safes[0]);
+		counterModule.callDecrement(safes[0]);
+
+		// Check the final count
+		uint256 newCount = counterModule.getCount(safes[0]);
+		assertEq(newCount, 0, "Count should be decremented to 0");
 	}
 
 	function testDecrementBelowZero() public {
-	    vm.expectRevert(abi.encodeWithSelector(CountIsZero.selector, safes[0]));
-	    counterModule.decrement(safes[0]);
+		bool success = counterModule.callDecrement(safes[0]);
+		assertFalse(success, "Decrement should fail when count is zero");
 	}
 }
