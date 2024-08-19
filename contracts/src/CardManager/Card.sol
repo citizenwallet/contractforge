@@ -22,6 +22,7 @@ import "./interfaces/ITokenEntryPoint.sol";
 import "./interfaces/IOwnable.sol";
 import "./interfaces/IWhitelist.sol";
 import "./interfaces/IWithdrawable.sol";
+import { toEthSignedMessageHash } from "../utils/Helpers.sol";
 
 /**
  * @title Card
@@ -163,19 +164,6 @@ contract Card is
                 msg.sender == tokenEntryPoint(),
             "account: not Owner or EntryPoint or TokenEntryPoint"
         );
-    }
-
-    function toEthSignedMessageHash(
-        bytes32 hash
-    ) internal pure returns (bytes32 message) {
-        // 32 is the length in bytes of hash,
-        // enforced by the type signature above
-        /// @solidity memory-safe-assembly
-        assembly {
-            mstore(0x00, "\x19Ethereum Signed Message:\n32")
-            mstore(0x1c, hash)
-            message := keccak256(0x00, 0x3c)
-        }
     }
 
     /// implement template method of BaseAccount
