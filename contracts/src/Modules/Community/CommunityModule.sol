@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
 import { Safe, OwnerManager, ModuleManager, Enum } from "safe-smart-account/contracts/Safe.sol";
 import { CompatibilityFallbackHandler } from "safe-smart-account/contracts/handler/CompatibilityFallbackHandler.sol";
 
@@ -18,6 +17,8 @@ import { UserOperation, UserOperationLib } from "account-abstraction/interfaces/
 import { IPaymaster } from "account-abstraction/interfaces/IPaymaster.sol";
 import { INonceManager } from "account-abstraction/interfaces/INonceManager.sol";
 
+import { UserOpHandler } from "./UserOpHandler.sol";
+
 import { ITokenEntryPoint } from "./interfaces/ITokenEntryPoint.sol";
 import { IUserOpValidator } from "./interfaces/IUserOpValidator.sol";
 
@@ -25,6 +26,7 @@ error CountIsZero(address safeAddr);
 error ModuleNotEnabled(address safeAddr);
 
 contract CommunityModule is
+	UserOpHandler,
 	CompatibilityFallbackHandler,
 	ITokenEntryPoint,
 	INonceManager,
@@ -38,7 +40,6 @@ contract CommunityModule is
 
 	////////////////
 
-	// keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 	bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH =
 		0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f;
 
@@ -146,16 +147,16 @@ contract CommunityModule is
 			// verify nonce
 			_validateNonce(op, sender, key);
 
-            (address to, uint256 value, bytes memory data) = _parseFromCallData(op.callData);
+			(address to, uint256 value, bytes memory data) = _parseFromCallData(op.callData);
 
 			// verify call data
 			_validateCallData(op, sender, to);
 
 			// verify account
-			// _validateAccount(op, sender, seq);
+			_validateAccount(op, sender, seq, key);
 
 			// verify paymaster signature
-			// _validatePaymasterUserOp(op);
+			_validatePaymasterUserOp(op);
 
 			// execute the op
 			_call(sender, to, value, data);
@@ -185,20 +186,19 @@ contract CommunityModule is
 	 * @param op The user operation to validate.
 	 * @param sender The address of the sender of the user operation.
 	 */
-	function _validateAccount(UserOperation calldata op, address sender, uint64 seq) internal virtual {
+	function _validateAccount(UserOperation calldata op, address sender, uint64 seq, uint192 key) internal virtual {
 		// call the initCode
 		if (seq == 0 && !_contractExists(sender)) {
 			_initAccount(op, sender);
 		}
 
 		// verify the user op signature
-		IUserOpValidator account = IUserOpValidator(sender);
+		require(validateUserOp(op, getUserOpHash(op)), "AA24 signature error");
 
-		console.log("VALIDATE USER OP");
-
-		require(account.validateUserOp(op, getUserOpHash(op)), "AA24 signature error");
-
-		console.log("VALIDATE USER OP DONE");
+		// INonceManager(_entrypoint).incrementNonce(key);
+		// Call incrementNonce through the Safe
+		bytes memory incrementNonceData = abi.encodeWithSelector(INonceManager.incrementNonce.selector, key);
+		_call(sender, address(_entrypoint), 0, incrementNonceData);
 	}
 
 	/**
@@ -363,7 +363,7 @@ contract CommunityModule is
 			size := extcodesize(contractAddress)
 		}
 		return size > 0;
-	} 
+	}
 
 	/**
 	 * @dev Internal function to call a contract with value and data.
@@ -374,16 +374,11 @@ contract CommunityModule is
 	 * @param data The data to send with the call.
 	 */
 	function _call(address sender, address to, uint256 value, bytes memory data) internal {
-		// (bool success, bytes memory result) = target.call{ value: value }(data);
-        console.log("sender", sender);
-        console.log("to", to);
-        console.log("value", value);
-        console.logBytes(data);
-        (bool success, bytes memory result) = Safe(payable(sender)).execTransactionFromModuleReturnData(
+		(bool success, bytes memory result) = Safe(payable(sender)).execTransactionFromModuleReturnData(
 			to,
 			value,
 			data,
-			Enum.Operation.DelegateCall
+			Enum.Operation.Call
 		);
 		if (!success) {
 			assembly {

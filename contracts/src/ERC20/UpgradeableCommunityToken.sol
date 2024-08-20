@@ -72,7 +72,7 @@ contract UpgradeableCommunityToken is
 		address from,
 		address to,
 		uint256 value
-	) internal override(ERC20Upgradeable, ERC20PausableUpgradeable) onlyOwner whenNotPaused {
+	) internal override(ERC20Upgradeable, ERC20PausableUpgradeable) whenNotPaused {
 		super._update(from, to, value);
 	}
 }

@@ -3,7 +3,6 @@ pragma solidity ^0.8.20;
 
 /* solhint-disable reason-string */
 /* solhint-disable no-inline-assembly */
-import "forge-std/Test.sol";
 
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -157,19 +156,7 @@ contract Paymaster is
         require(currentTime >= validAfter, "AA32 expired or not due");
         require(currentTime < validUntil, "AA32 expired or not due");
 
-        console.logBytes32(getHash(userOp, validUntil, validAfter));
-
         bytes32 hash = toEthSignedMessageHash(getHash(userOp, validUntil, validAfter));
-
-        console.log("currentTime", currentTime);
-
-        console.log("validUntil", validUntil);
-        console.log("validAfter", validAfter);
-        console.logBytes(signature);
-
-        console.log("recovered", hash.recover(signature));
-        console.log("sponsor", sponsor());
-
         if (sponsor() != hash.recover(signature)) {
             return ("", _packValidationData(true, validUntil, validAfter));
         }
