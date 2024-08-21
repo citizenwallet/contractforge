@@ -16,3 +16,6 @@
 [submodule "contracts/lib/safe-smart-account"]
 	path = contracts/lib/safe-smart-account
 	url = https://github.com/safe-global/safe-smart-account
+[submodule "contracts/lib/modulekit"]
+	path = contracts/lib/modulekit
+	url = https://github.com/rhinestonewtf/modulekit
