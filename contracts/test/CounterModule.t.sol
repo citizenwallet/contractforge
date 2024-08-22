@@ -27,18 +27,16 @@ contract CounterModuleTest is Test {
 		// Deploy the counter module
 		counterModule = new CounterModule();
 		safes = deploymentScript.createSafesWithModule(3, 300, address(counterModule));
-
-		bool isEnabled = ModuleManager(payable(safes[0])).isModuleEnabled(address(counterModule));
 	}
 
-	function testModuleIsEnabled() public {
+	function testModuleIsEnabled() public view {
 		for (uint256 i = 0; i < safes.length; i++) {
 			bool isEnabled = ModuleManager(payable(safes[i])).isModuleEnabled(address(counterModule));
 			assertTrue(isEnabled, "CounterModule should be enabled for the Safe");
 		}
 	}
 
-	function testInitialCount() public {
+	function testInitialCount() public view {
 		uint256 initialCount = counterModule.getCount(safes[0]);
 		assertEq(initialCount, 0);
 	}
