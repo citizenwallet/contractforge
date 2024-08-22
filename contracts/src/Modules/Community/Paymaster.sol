@@ -44,8 +44,9 @@ contract Paymaster is
         _disableInitializers();
     }
 
-    function initialize(address aSponsor) public virtual initializer {
+    function initialize(address aSponsor, address[] calldata addresses) public virtual initializer {
         __Ownable_init(aSponsor);
+        __Whitelist_init(addresses);
 
         _initialize(aSponsor);
     }
@@ -73,6 +74,44 @@ contract Paymaster is
     ////////////////////////////////////////////////
 
     bytes4 private executeSelector;
+
+    ////////////////////////////////////////////////
+    // whitelist
+    // more gas efficient for updating the whitelist than only using a mapping
+	uint256 private _whitelistVersion;
+	mapping(address => uint256) private _whitelist;
+
+	function __Whitelist_init(address[] calldata addresses) internal initializer {
+		_whitelistVersion = 0;
+		_updateWhiteList(addresses);
+	}
+
+	/**
+	 * @dev Checks if an address is in the whitelist.
+	 * @param addr The address to check.
+	 * @return A boolean indicating whether the address is in the whitelist.
+	 */
+	function isWhitelisted(address addr) internal view returns (bool) {
+		return _whitelist[addr] == _whitelistVersion;
+	}
+
+	function _updateWhiteList(address[] calldata addresses) internal virtual {
+		updateWhitelist(addresses);
+	}
+
+	/**
+	 * @dev Updates the whitelist.
+	 * @param addresses The addresses to update the whitelist.
+	 */
+	function updateWhitelist(address[] calldata addresses) public onlyOwner {
+		// bump the version number so that we don't have to clear the mapping
+		_whitelistVersion++;
+
+		for (uint i = 0; i < addresses.length; i++) {
+			_whitelist[addresses[i]] = _whitelistVersion;
+		}
+	}
+    ////////////////////////////////////////////////
 
     function pack(
         UserOperation calldata userOp
@@ -156,6 +195,11 @@ contract Paymaster is
         require(currentTime >= validAfter, "AA32 expired or not due");
         require(currentTime < validUntil, "AA32 expired or not due");
 
+        (address to, , ) = _parseFromCallData(userOp.callData);
+        address sender = userOp.getSender();
+
+        require(to == sender || isWhitelisted(to), "AA38 contract not whitelisted");
+
         bytes32 hash = toEthSignedMessageHash(getHash(userOp, validUntil, validAfter));
         if (sponsor() != hash.recover(signature)) {
             return ("", _packValidationData(true, validUntil, validAfter));
@@ -177,6 +221,18 @@ contract Paymaster is
         );
         signature = paymasterAndData[SIGNATURE_OFFSET:];
     }
+
+    /**
+	 * @dev Extracts the address from the call data of a user operation.
+	 * @param rawData The call data to extract the address from.
+	 * @return An address.
+	 */
+	function _parseFromCallData(bytes calldata rawData) internal pure returns (address, uint256, bytes memory) {
+		// Decode the first argument as an address (the aaModule address)
+		(address to, uint256 value, bytes memory data) = abi.decode(rawData[4:], (address, uint256, bytes));
+
+		return (to, value, data);
+	}
 
     function postOp(
         PostOpMode mode,

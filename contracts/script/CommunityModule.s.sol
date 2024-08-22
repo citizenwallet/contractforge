@@ -31,12 +31,12 @@ contract CommunityModuleScript is Script {
 
 		address paymasterImplementation = address(new Paymaster());
 
-		bytes memory data = abi.encodeCall(Paymaster.initialize, deployer);
+		bytes memory data = abi.encodeCall(Paymaster.initialize, (deployer, addresses));
 		address paymasterProxy = address(new ERC1967Proxy(paymasterImplementation, data));
 
 		address communityImplementation = address(new CommunityModule(INonceManager(entryPoint)));
 
-		bytes memory communityData = abi.encodeCall(CommunityModule.initialize, (deployer, paymasterProxy, addresses));
+		bytes memory communityData = abi.encodeCall(CommunityModule.initialize, (deployer));
 		address communityProxy = address(new ERC1967Proxy(communityImplementation, communityData));
 
 		vm.stopBroadcast();

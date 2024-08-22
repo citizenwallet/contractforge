@@ -2,20 +2,25 @@
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
+import { Utils } from "./utils/Utils.sol";
+
 import { INonceManager } from "account-abstraction/interfaces/INonceManager.sol";
 import { UserOperation } from "account-abstraction/interfaces/UserOperation.sol";
 import { Safe, ModuleManager, Enum } from "safe-smart-account/contracts/Safe.sol";
+import { SafeProxyFactory } from "safe-smart-account/contracts/proxies/SafeProxyFactory.sol";
 
 import { Utils } from "./utils/Utils.sol";
 
 import { SafeSuiteSetupScript } from "../script/SafeSuiteSetup.s.sol";
-import { AAModuleScript } from "../script/4337Module.s.sol";
+import { SafeProxyFactoryScript } from "../script/SafeProxyFactory.s.sol";
+import { AccountFactoryScript } from "../script/AccountFactory.s.sol";
 import { DeploymentScript } from "../script/Deployment.s.sol";
 import { CommunityModuleScript } from "../script/CommunityModule.s.sol";
 import { UpgradeableCommunityTokenScript } from "../script/UpgradeableCommunityToken.s.sol";
 
 import { CommunityModule } from "../src/Modules/Community/CommunityModule.sol";
 import { Paymaster } from "../src/Modules/Community/Paymaster.sol";
+import { AccountFactory } from "../src/Modules/Community/AccountFactory.sol";
 import { UpgradeableCommunityToken } from "../src/ERC20/UpgradeableCommunityToken.sol";
 
 import { toEthSignedMessageHash } from "../src/utils/Helpers.sol";
@@ -26,11 +31,14 @@ contract CommunityModuleTest is Test {
 
 	UpgradeableCommunityTokenScript upgradeableCommunityTokenScript;
 
+	Utils public utils = new Utils();
+
 	CommunityModule public communityModule;
 	Paymaster public paymaster;
+	AccountFactory public accountFactory;
 	UpgradeableCommunityToken public token;
 	address public safeSingleton;
-	address public aaModule;
+	address public safeProxyFactory;
 	address[] public safes;
 
 	uint256 private constant VALID_TIMESTAMP_OFFSET = 20;
@@ -54,6 +62,10 @@ contract CommunityModuleTest is Test {
 		DeploymentScript deploymentScript = new DeploymentScript();
 		deploymentScript.fundDeployer();
 
+		// Deploy the Safe Proxy Factory
+		SafeProxyFactoryScript safeProxyFactoryScript = new SafeProxyFactoryScript();
+		safeProxyFactory = safeProxyFactoryScript.deploy();
+
 		// Deploy the community module
 		upgradeableCommunityTokenScript = new UpgradeableCommunityTokenScript();
 		token = upgradeableCommunityTokenScript.deploy();
@@ -64,18 +76,34 @@ contract CommunityModuleTest is Test {
 		CommunityModuleScript communityModuleScript = new CommunityModuleScript();
 		(communityModule, paymaster) = communityModuleScript.deploy(whitelistedAddresses);
 
+		// Deploy the account factory
+		AccountFactoryScript accountFactoryScript = new AccountFactoryScript();
+		accountFactory = accountFactoryScript.deploy(address(communityModule));
+
+		vm.startBroadcast(ownerPrivateKey);
+
+		// uint256 numSafe = 3;
+		// safes = new address[](numSafe);
+		// for (uint256 i = 0; i < numSafe; i++) {
+		// 	// create the safes
+		// 	safes[i] = accountFactory.createAccount(owner, i);
+
+		// 	console.log("new safe", safes[i]);
+		// }
+
+		vm.stopBroadcast();
+
+		// enable the community module for the new safes
+		// deploymentScript.enableModule(safes, address(communityModule));
+
 		safes = deploymentScript.createSafesWithModule(3, 300, address(communityModule));
 
-		// Deploy the Safe 4337 Module
-		AAModuleScript aaModuleScript = new AAModuleScript();
-		aaModule = aaModuleScript.deploy();
-
-		deploymentScript.enableModule(safes, aaModule);
+		// deploymentScript.enableModule(safes, aaModule);
 
 		upgradeableCommunityTokenScript.mint(safes[0], 100000000);
 	}
 
-	function testModuleIsEnabled() public {
+	function testCommunityModuleIsEnabled() public {
 		for (uint256 i = 0; i < safes.length; i++) {
 			bool isEnabled = ModuleManager(payable(safes[i])).isModuleEnabled(address(communityModule));
 			assertTrue(isEnabled, "CommunityModule should be enabled for the Safe");
@@ -89,9 +117,15 @@ contract CommunityModuleTest is Test {
 		}
 	}
 
-	function testPaymasterAddress() public {
-		address paymasterAddress = communityModule.paymaster();
-		assertEq(paymasterAddress, address(paymaster), "Paymaster address should be that of deployed paymaster");
+	function testAccountFactory() public {
+		address userA = utils.getNextUserAddress();
+
+		address counterFactualSafeA = accountFactory.getAddress(userA, 0);
+
+		console.log("counterFactualSafeA", counterFactualSafeA);
+
+		address safeA = accountFactory.createAccount(userA, 0);
+		assertEq(safeA, counterFactualSafeA, "Account factory address should be that of deployed account factory");
 	}
 
 	function testTokenBalance() public {
