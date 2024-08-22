@@ -12,7 +12,6 @@ import { SafeProxyFactory } from "safe-smart-account/contracts/proxies/SafeProxy
 import { Utils } from "./utils/Utils.sol";
 
 import { SafeSuiteSetupScript } from "../script/SafeSuiteSetup.s.sol";
-import { SafeProxyFactoryScript } from "../script/SafeProxyFactory.s.sol";
 import { AccountFactoryScript } from "../script/AccountFactory.s.sol";
 import { DeploymentScript } from "../script/Deployment.s.sol";
 import { CommunityModuleScript } from "../script/CommunityModule.s.sol";
@@ -38,7 +37,6 @@ contract CommunityModuleTest is Test {
 	AccountFactory public accountFactory;
 	UpgradeableCommunityToken public token;
 	address public safeSingleton;
-	address public safeProxyFactory;
 	address[] public safes;
 
 	uint256 private constant VALID_TIMESTAMP_OFFSET = 20;
@@ -62,10 +60,6 @@ contract CommunityModuleTest is Test {
 		DeploymentScript deploymentScript = new DeploymentScript();
 		deploymentScript.fundDeployer();
 
-		// Deploy the Safe Proxy Factory
-		SafeProxyFactoryScript safeProxyFactoryScript = new SafeProxyFactoryScript();
-		safeProxyFactory = safeProxyFactoryScript.deploy();
-
 		// Deploy the community module
 		upgradeableCommunityTokenScript = new UpgradeableCommunityTokenScript();
 		token = upgradeableCommunityTokenScript.deploy();
@@ -82,35 +76,26 @@ contract CommunityModuleTest is Test {
 
 		vm.startBroadcast(ownerPrivateKey);
 
-		// uint256 numSafe = 3;
-		// safes = new address[](numSafe);
-		// for (uint256 i = 0; i < numSafe; i++) {
-		// 	// create the safes
-		// 	safes[i] = accountFactory.createAccount(owner, i);
-
-		// 	console.log("new safe", safes[i]);
-		// }
+		uint256 numSafe = 3;
+		safes = new address[](numSafe);
+		for (uint256 i = 0; i < numSafe; i++) {
+			// create the safes
+			safes[i] = accountFactory.createAccount(owner, i);
+		}
 
 		vm.stopBroadcast();
-
-		// enable the community module for the new safes
-		// deploymentScript.enableModule(safes, address(communityModule));
-
-		safes = deploymentScript.createSafesWithModule(3, 300, address(communityModule));
-
-		// deploymentScript.enableModule(safes, aaModule);
 
 		upgradeableCommunityTokenScript.mint(safes[0], 100000000);
 	}
 
-	function testCommunityModuleIsEnabled() public {
+	function testCommunityModuleIsEnabled() public view {
 		for (uint256 i = 0; i < safes.length; i++) {
 			bool isEnabled = ModuleManager(payable(safes[i])).isModuleEnabled(address(communityModule));
 			assertTrue(isEnabled, "CommunityModule should be enabled for the Safe");
 		}
 	}
 
-	function testInitialNonce() public {
+	function testInitialNonce() public view {
 		for (uint256 i = 0; i < safes.length; i++) {
 			uint256 nonce = communityModule.getNonce(safes[i], 0);
 			assertEq(nonce, 0, "Nonce should be 0");
@@ -122,13 +107,11 @@ contract CommunityModuleTest is Test {
 
 		address counterFactualSafeA = accountFactory.getAddress(userA, 0);
 
-		console.log("counterFactualSafeA", counterFactualSafeA);
-
 		address safeA = accountFactory.createAccount(userA, 0);
 		assertEq(safeA, counterFactualSafeA, "Account factory address should be that of deployed account factory");
 	}
 
-	function testTokenBalance() public {
+	function testTokenBalance() public view {
 		assertEq(token.balanceOf(safes[0]), 100000000, "Balance should be 100000000");
 		assertEq(token.balanceOf(safes[1]), 0, "Balance should be 0");
 		assertEq(token.balanceOf(safes[2]), 0, "Balance should be 0");
@@ -150,7 +133,41 @@ contract CommunityModuleTest is Test {
 	}
 
 	function testTransfer() public {
+		bytes memory initCode = bytes("");
+
 		bytes memory transferData = abi.encodeWithSignature("transfer(address,uint256)", safes[1], 100000000);
+
+		UserOperation memory userOp = createUserOperation(safes[0], initCode, transferData);
+		signAndExecuteUserOp(userOp, ownerPrivateKey);
+
+		assertEq(token.balanceOf(safes[0]), 0, "Balance should be 0");
+		assertEq(token.balanceOf(safes[1]), 100000000, "Balance should be 100000000");
+	}
+
+	function testNewSafeTransfer() public {
+		(address newSafe, uint256 newOwnerPrivateKey) = setupNewSafe();
+
+		bytes memory initCode = generateInitCode(address(accountFactory), vm.addr(newOwnerPrivateKey), 0);
+
+		bytes memory transferData = abi.encodeWithSignature("transfer(address,uint256)", safes[2], 100000000);
+
+		UserOperation memory userOp = createUserOperation(newSafe, initCode, transferData);
+		signAndExecuteUserOp(userOp, newOwnerPrivateKey);
+		
+
+		assertEq(token.balanceOf(newSafe), 0, "Balance should be 0");
+		assertEq(token.balanceOf(safes[2]), 100000000, "Balance should be 100000000");
+	}
+
+	function setupNewSafe() private returns (address, uint256) {
+		uint256 newOwnerPrivateKey = uint256(keccak256(abi.encodePacked("deterministic_salt", block.number)));
+		address newOwner = vm.addr(newOwnerPrivateKey);
+		address newSafe = accountFactory.getAddress(newOwner, 0);
+		upgradeableCommunityTokenScript.mint(newSafe, 100000000);
+		return (newSafe, newOwnerPrivateKey);
+	}
+
+	function createUserOperation(address _safe, bytes memory initCode, bytes memory transferData) private view returns (UserOperation memory) {
 		bytes memory callData = abi.encodeWithSelector(
 			ModuleManager.execTransactionFromModule.selector,
 			address(token),
@@ -159,10 +176,10 @@ contract CommunityModuleTest is Test {
 			Enum.Operation.Call
 		);
 
-		UserOperation memory userOperation = UserOperation({
-			sender: safes[0],
-			nonce: getNonce(safes[0], 0),
-			initCode: bytes(""),
+		return UserOperation({
+			sender: _safe,
+			nonce: getNonce(_safe, 0),
+			initCode: initCode,
 			callData: callData,
 			callGasLimit: 100000,
 			verificationGasLimit: 100000,
@@ -172,35 +189,34 @@ contract CommunityModuleTest is Test {
 			paymasterAndData: bytes(""),
 			signature: bytes("")
 		});
+	}
 
+	function signAndExecuteUserOp(UserOperation memory userOp, uint256 newOwnerPrivateKey) private {
+		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, newOwnerPrivateKey);
+
+		UserOperation[] memory userOperations = new UserOperation[](1);
+		userOperations[0] = userOp;
+
+		vm.startBroadcast(ownerPrivateKey);
+		communityModule.handleOps(userOperations, payable(owner));
+		vm.stopBroadcast();
+	}
+
+	function signUserOp(UserOperation memory userOp, uint256 newOwnerPrivateKey) private view returns (bytes memory, bytes memory) {
 		uint48 validUntil = uint48(block.timestamp + 1 hours);
 		uint48 validAfter = uint48(block.timestamp);
 
-		bytes32 paymasterHash = toEthSignedMessageHash(paymaster.getHash(userOperation, validUntil, validAfter));
-
-		// sign the paymaster hash
+		bytes32 paymasterHash = toEthSignedMessageHash(paymaster.getHash(userOp, validUntil, validAfter));
 		(uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, paymasterHash);
+		bytes memory paymasterAndData = constructPaymasterAndData(validUntil, validAfter, abi.encodePacked(r, s, v));
+
+		userOp.paymasterAndData = paymasterAndData;
+
+		bytes32 userOperationHash = toEthSignedMessageHash(communityModule.getUserOpHash(userOp));
+		(v, r, s) = vm.sign(newOwnerPrivateKey, userOperationHash);
 		bytes memory signature = abi.encodePacked(r, s, v);
-		userOperation.paymasterAndData = constructPaymasterAndData(validUntil, validAfter, signature);
 
-		// sign the user operation
-		bytes32 userOperationHash = toEthSignedMessageHash(communityModule.getUserOpHash(userOperation));
-		// userOperation.signature = generateSafeSignature(userOperationHash);
-		(v, r, s) = vm.sign(ownerPrivateKey, userOperationHash);
-		signature = abi.encodePacked(r, s, v);
-		userOperation.signature = signature;
-
-		UserOperation[] memory userOperations = new UserOperation[](1);
-		userOperations[0] = userOperation;
-
-		vm.startBroadcast(ownerPrivateKey);
-
-		communityModule.handleOps(userOperations, payable(owner));
-
-		vm.stopBroadcast();
-
-		assertEq(token.balanceOf(safes[0]), 0, "Balance should be 0");
-		assertEq(token.balanceOf(safes[1]), 100000000, "Balance should be 100000000");
+		return (paymasterAndData, signature);
 	}
 
 	function constructPaymasterAndData(
@@ -211,49 +227,23 @@ contract CommunityModuleTest is Test {
 		return abi.encodePacked(address(paymaster), abi.encode(validUntil, validAfter), signature);
 	}
 
-	function getSafe4337TxCalldata(
-		address sender,
-		address target,
-		uint256 value,
-		bytes memory data,
-		uint8 operation // {0: Call, 1: DelegateCall}
-	) internal returns (bytes memory) {
-		// Get nonce from Entrypoint
-		// uint256 nonce = entrypoint.getNonce(sender, 0);
-
-		return
-			abi.encodeWithSignature(
-				"checkAndExecTransactionFromModule(address,address,uint256,bytes,uint8,uint256)",
-				sender,
-				target,
-				value,
-				data,
-				operation,
-				0
-			);
-	}
-
-	// Add this function to generate a Safe-compatible signature
-	function generateSafeSignature(bytes32 hash) internal view returns (bytes memory) {
-		// Assuming a single owner for simplicity. Adjust if there are multiple owners.
-		(uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, hash);
-
-		bytes memory signature = abi.encodePacked(r, s, v);
-
-		// Safe signature format: {bytes32 r}{bytes32 s}{uint8 v}{uint256 guardianSignatureType}
-		// guardianSignatureType: 0 = EOA, 1 = EIP1271
-		return
-			abi.encodePacked(
-				bytes32(uint256(1)), // Threshold
-				signature,
-				uint256(0) // EOA signature type
-			);
-	}
-
 	function getNonce(address sender, uint192 key) internal view returns (uint256) {
 		address entryPoint = vm.envAddress("ERC4337_ENTRYPOINT");
 
 		return INonceManager(payable(entryPoint)).getNonce(sender, key);
+	}
+
+	function generateInitCode(address factoryAddress, address _owner, uint256 salt) public pure returns (bytes memory) {
+		// Define the function selector for the createAccount function
+		bytes4 functionSelector = bytes4(keccak256("createAccount(address,uint256)"));
+
+		// Encode the calldata for the factory function
+		bytes memory calldataEncoded = abi.encodeWithSelector(functionSelector, _owner, salt);
+
+		// Concatenate the factory address and the calldata
+		bytes memory initCode = abi.encodePacked(factoryAddress, calldataEncoded);
+
+		return initCode;
 	}
 
 	function isAnvil() private view returns (bool) {

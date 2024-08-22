@@ -51,8 +51,8 @@ contract DeploymentScript is NetworkUtilsScript {
 			bytes memory enableModuleData = abi.encodeWithSelector(ModuleManager.enableModule.selector, safeModule);
 			prepareSafeTx(Safe(payable(safes[i])), 0, enableModuleData);
 
-            bool isEnabled = Safe(payable(safes[i])).isModuleEnabled(safeModule);
-            console.log("isEnabled", isEnabled);
+			bool isEnabled = Safe(payable(safes[i])).isModuleEnabled(safeModule);
+			console.log("isEnabled", isEnabled);
 
 			// return the safe instance
 			emit log_named_address("Safe", safes[i]);
@@ -61,10 +61,7 @@ contract DeploymentScript is NetworkUtilsScript {
 		vm.stopBroadcast();
 	}
 
-	function enableModule(
-		address[] memory safes,
-		address safeModule
-	) public payable {
+	function enableModule(address[] memory safes, address safeModule) public payable {
 		// get network and msg sender
 		getNetworkAndMsgSender();
 
@@ -73,25 +70,18 @@ contract DeploymentScript is NetworkUtilsScript {
 
 			// Check if the module is already enabled
 			if (safe.isModuleEnabled(safeModule)) {
-				console.log("Module already enabled for Safe:", safes[i]);
 				continue;
 			}
 
 			// Prepare the transaction to enable the module
 			bytes memory enableModuleData = abi.encodeWithSelector(ModuleManager.enableModule.selector, safeModule);
-			
+
 			// Execute the transaction to enable the module
 			bool success = executeSafeTx(safe, enableModuleData);
 
 			if (success) {
-				console.log("Module successfully enabled for Safe:", safes[i]);
 				emit log_named_address("Safe with module enabled", safes[i]);
-			} else {
-				console.log("Failed to enable module for Safe:", safes[i]);
 			}
-
-			// Verify that the module is now enabled
-			bool isEnabled = safe.isModuleEnabled(safeModule);
 		}
 
 		vm.stopBroadcast();
@@ -114,18 +104,20 @@ contract DeploymentScript is NetworkUtilsScript {
 		(uint8 v, bytes32 r, bytes32 s) = vm.sign(deployerPrivateKey, txHash);
 		bytes memory signature = abi.encodePacked(r, s, v);
 
-		try safe.execTransaction(
-			address(safe),
-			0,
-			data,
-			Enum.Operation.Call,
-			0,
-			0,
-			0,
-			address(0),
-			payable(address(0)),
-			signature
-		) returns (bool success) {
+		try
+			safe.execTransaction(
+				address(safe),
+				0,
+				data,
+				Enum.Operation.Call,
+				0,
+				0,
+				0,
+				address(0),
+				payable(address(0)),
+				signature
+			)
+		returns (bool success) {
 			return success;
 		} catch {
 			return false;
