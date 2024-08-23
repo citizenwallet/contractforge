@@ -84,15 +84,11 @@ contract CardManagerModuleTest is Test {
 
 		// Deploy the card manager module
 		CardManagerModuleScript cardManagerModuleScript = new CardManagerModuleScript();
-		cardManagerModule = cardManagerModuleScript.deploy(); // chicken and egg problem
+		(cardManagerModule, cardFactory) = cardManagerModuleScript.deploy(address(communityModule)); // chicken and egg problem
 
 		modules = new address[](2);
 		modules[0] = address(communityModule);
 		modules[1] = address(cardManagerModule);
-
-		// Deploy the card factory
-		CardFactoryScript cardFactoryScript = new CardFactoryScript();
-		cardFactory = cardFactoryScript.deploy(address(communityModule), address(cardManagerModule));
 
 		vm.startBroadcast(ownerPrivateKey);
 

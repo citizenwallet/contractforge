@@ -57,7 +57,7 @@ contract CardManagerModule is
 	/////////////////////////////////////////////////
 	// VARIABLES
 
-	address immutable cardFactory;
+	address public cardFactory;
 	mapping(bytes32 => address) public instanceOwners;
 	mapping(bytes32 => bool) public instancePaused;
 	uint256 public instanceCount;
@@ -76,16 +76,12 @@ contract CardManagerModule is
 	/////////////////////////////////////////////////
 	// INITIALIZATION
 
-	/// @custom:oz-upgrades-unsafe-allow constructor
-	constructor(address _cardFactory) {
-		cardFactory = _cardFactory;
-		_disableInitializers();
-	}
-
-	function initialize(address _owner) external initializer {
+	function initialize(address _owner, address _cardFactory) external initializer {
 		__Ownable_init(_owner);
 		__UUPSUpgradeable_init();
 		__ReentrancyGuard_init();
+
+		cardFactory = _cardFactory;
 	}
 
 	/////////////////////////////////////////////////
@@ -102,7 +98,7 @@ contract CardManagerModule is
 	/////////////////////////////////////////////////
 	// INSTANCE MANAGEMENT
 
-	function getInstanceId(uint256 salt) external pure returns (bytes32) {
+	function getInstanceId(uint256 salt) external view returns (bytes32) {
 		return keccak256(abi.encodePacked(salt, address(this)));
 	}
 
@@ -276,7 +272,7 @@ contract CardManagerModule is
 
 		bytes memory data = abi.encodeCall(ERC20.transfer, (to, amount));
 
-		bool success = ModuleManager(cardAddress).execTransactionFromModule(cardAddress, 0, data, Enum.Operation.Call); // MAYBE DELEGATECALL?
+		bool success = ModuleManager(cardAddress).execTransactionFromModule(address(token), 0, data, Enum.Operation.Call); // MAYBE DELEGATECALL?
 		if (!success) {
 			revert("CM40 Failed to withdraw");
 		}
