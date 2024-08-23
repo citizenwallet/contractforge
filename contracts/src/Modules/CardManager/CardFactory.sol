@@ -7,14 +7,16 @@ import { SafeProxy } from "safe-smart-account/contracts/proxies/SafeProxy.sol";
 
 import { SafeSuiteLib } from "../../utils/SafeSuiteLib.sol";
 
-contract AccountFactory is SafeProxyFactory {
+contract CardFactory is SafeProxyFactory {
 	address immutable communityModule;
+	address immutable cardManagerModule;
 
-	string public constant NAME = "Account Factory";
+	string public constant NAME = "Card Factory";
 	string public constant VERSION = "0.0.1";
 
-	constructor(address _communityModule) {
+	constructor(address _communityModule, address _cardManagerModule) {
 		communityModule = _communityModule;
+		cardManagerModule = _cardManagerModule;
 	}
 
 	/**
@@ -99,8 +101,9 @@ contract AccountFactory is SafeProxyFactory {
 		address[] memory owners = new address[](1);
 		owners[0] = _owner;
 
-		address[] memory modules = new address[](1);
+		address[] memory modules = new address[](2);
 		modules[0] = communityModule;
+		modules[1] = cardManagerModule;
 
 		// Prepare the data to call enableModule on the CommunityModule
 		// Encode the enableModule function call

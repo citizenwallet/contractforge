@@ -8,7 +8,6 @@ contract NetworkUtilsScript is Test, SafeSingletonFixtureTest {
     uint256 internal deployerPrivateKey;
 
     function fundDeployer() public {
-        console.log("Funding deployer");
         if (deployerPrivateKey == 0) {
             deployerPrivateKey = isAnvil()
             ? 77_814_517_325_470_205_911_140_941_194_401_928_579_557_062_014_761_831_930_645_393_041_380_819_009_408
