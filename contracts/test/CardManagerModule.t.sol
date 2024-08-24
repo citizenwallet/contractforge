@@ -12,7 +12,6 @@ import { SafeProxyFactory } from "safe-smart-account/contracts/proxies/SafeProxy
 import { Utils } from "./utils/Utils.sol";
 
 import { SafeSuiteSetupScript } from "../script/SafeSuiteSetup.s.sol";
-import { CardFactoryScript } from "../script/CardFactory.s.sol";
 import { AccountFactoryScript } from "../script/AccountFactory.s.sol";
 import { CardManagerModuleScript } from "../script/CardManagerModule.s.sol";
 import { DeploymentScript } from "../script/Deployment.s.sol";

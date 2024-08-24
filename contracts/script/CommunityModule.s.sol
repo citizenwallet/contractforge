@@ -21,13 +21,13 @@ contract CommunityModuleScript is Script {
 
 		vm.startBroadcast(deployerPrivateKey);
 
-		if (isAnvil()) {
-            vm.deal(vm.addr(deployerPrivateKey), 100 ether);
-        }
-
 		address entryPoint = vm.envAddress("ERC4337_ENTRYPOINT");
 
-		vm.etch(entryPoint, MAINNET_ENTRYPOINT_DEPLOYED_CODE);
+		if (isAnvil()) {
+            vm.deal(vm.addr(deployerPrivateKey), 100 ether);
+
+			vm.etch(entryPoint, MAINNET_ENTRYPOINT_DEPLOYED_CODE);
+        }
 
 		address paymasterImplementation = address(new Paymaster());
 
