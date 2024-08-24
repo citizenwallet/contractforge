@@ -61,7 +61,7 @@ contract CardManagerModule is
 	mapping(bytes32 => address) public instanceOwners;
 	mapping(bytes32 => bool) public instancePaused;
 	uint256 public instanceCount;
-	mapping(bytes32 => uint256) public instanceCardCount;
+	int256 public cardCount;
 
 	mapping(bytes32 => uint256) private _whitelistVersion;
 	mapping(bytes32 => mapping(address => uint256)) private _whitelist;
@@ -137,6 +137,13 @@ contract CardManagerModule is
 		_;
 	}
 
+	modifier onlyCreatedInstance(bytes32 id) {
+		if (instanceOwners[id] == address(0)) {
+			revert("CM12 Instance does not exist");
+		}
+		_;
+	}
+
 	modifier onlyUnpausedInstance(bytes32 id) {
 		if (instancePaused[id]) {
 			revert("CM13 Instance is paused");
@@ -199,13 +206,18 @@ contract CardManagerModule is
 		return keccak256(abi.encodePacked(id, serial, address(this)));
 	}
 
-	function createCard(bytes32 id, uint256 serial) public returns (address) {
-		(uint256 cardNonce, address cardAddress) = _getCardNonceAndAddress(id, serial);
+	/**
+	 * @dev Creates a card.
+	 * @param cardHash The hash of the card.
+	 * @return The address of the card.
+	 */
+	function createCard(bytes32 cardHash) public returns (address) {
+		(uint256 cardNonce, address cardAddress) = _getCardNonceAndAddress(cardHash);
 		if (contractExists(cardAddress)) {
 			return cardAddress;
 		}
 
-		instanceCardCount[id]++;
+		cardCount++;
 
 		CardFactory(cardFactory).createAccount(address(this), cardNonce);
 
@@ -216,19 +228,16 @@ contract CardManagerModule is
 
 	/**
 	 * @dev Retrieves the address of a card.
-	 * @param id The id of the card.
-	 * @param serial The serial of the card.
+	 * @param cardHash The hash of the card.
 	 * @return The address of the card.
 	 */
-	function getCardAddress(bytes32 id, uint256 serial) public view returns (address) {
-		( , address cardAddress) = _getCardNonceAndAddress(id, serial);
+	function getCardAddress(bytes32 cardHash) public view returns (address) {
+		(, address cardAddress) = _getCardNonceAndAddress(cardHash);
 
 		return cardAddress;
 	}
 
-	function _getCardNonceAndAddress(bytes32 id, uint256 serial) internal view returns (uint256, address) {
-		bytes32 cardHash = getCardHash(id, serial);
-
+	function _getCardNonceAndAddress(bytes32 cardHash) internal view returns (uint256, address) {
 		uint256 cardNonce = _bytes32ToUint256(cardHash);
 
 		address cardAddress = CardFactory(cardFactory).getAddress(address(this), cardNonce);
@@ -243,8 +252,8 @@ contract CardManagerModule is
 	/////////////////////////////////////////////////
 	// CARD OWNERSHIP
 
-	function addOwner(bytes32 id, uint256 serial, address newOwner) public onlyInstanceOwner(id) {
-		address cardAddress = getCardAddress(id, serial);
+	function addOwner(bytes32 id, bytes32 cardHash, address newOwner) public onlyInstanceOwner(id) {
+		address cardAddress = getCardAddress(cardHash);
 
 		if (!contractExists(cardAddress)) {
 			revert("CM33 Card is not created");
@@ -263,16 +272,27 @@ contract CardManagerModule is
 	/////////////////////////////////////////////////
 	// FUND WITHDRAWAL
 
-	function withdraw(bytes32 id, uint256 serial, IERC20 token, address to, uint256 amount) public onlyWhitelisted(id, to) {
-		address cardAddress = getCardAddress(id, serial);
+	function withdraw(
+		bytes32 id,
+		bytes32 cardHash,
+		IERC20 token,
+		address to,
+		uint256 amount
+	) public onlyCreatedInstance(id) onlyWhitelisted(id, to) onlyUnpausedInstance(id) {
+		address cardAddress = getCardAddress(cardHash);
 
 		if (!contractExists(cardAddress)) {
-			createCard(id, serial);
+			createCard(cardHash);
 		}
 
 		bytes memory data = abi.encodeCall(ERC20.transfer, (to, amount));
 
-		bool success = ModuleManager(cardAddress).execTransactionFromModule(address(token), 0, data, Enum.Operation.Call);
+		bool success = ModuleManager(cardAddress).execTransactionFromModule(
+			address(token),
+			0,
+			data,
+			Enum.Operation.Call
+		);
 		if (!success) {
 			revert("CM40 Failed to withdraw");
 		}

@@ -119,8 +119,10 @@ contract CardManagerModuleTest is Test {
 		for (uint256 i = 0; i < numSafe; i++) {
 			tagSerials[i] = i;
 
+			bytes32 cardHash = keccak256(abi.encodePacked(instanceId, i, address(cardManagerModule)));
+
 			// create the tags
-			tags[i] = cardManagerModule.createCard(instanceId, i);
+			tags[i] = cardManagerModule.createCard(cardHash);
 		}
 
 		cardManagerModule.createInstance(instanceId);
@@ -165,6 +167,12 @@ contract CardManagerModuleTest is Test {
 		assertEq(safeA, counterFactualSafeA, "Account factory address should be that of deployed account factory");
 	}
 
+	function testCardHash() public {
+		bytes32 cardHash = keccak256(abi.encodePacked(instanceId, uint256(3), address(cardManagerModule)));
+		bytes32 cardHash2 = cardManagerModule.getCardHash(instanceId, uint256(3));
+		assertEq(cardHash, cardHash2, "Local card hash should be the same as the one returned by the contract");
+	}
+
 	function testTokenBalance() public view {
 		assertEq(token.balanceOf(tags[0]), 100000000, "Balance should be 100000000");
 		assertEq(token.balanceOf(tags[1]), 0, "Balance should be 0");
@@ -200,12 +208,14 @@ contract CardManagerModuleTest is Test {
 	}
 
 	function testTransfer() public {
+		bytes32 cardHash = keccak256(abi.encodePacked(instanceId, tagSerials[0], address(cardManagerModule)));
+
 		bytes memory initCode = bytes("");
 
 		bytes memory transferData = abi.encodeWithSignature(
-			"withdraw(bytes32,uint256,address,address,uint256)",
+			"withdraw(bytes32,bytes32,address,address,uint256)",
 			instanceId,
-			tagSerials[0],
+			cardHash,
 			address(token),
 			vendor,
 			100000000
@@ -223,12 +233,14 @@ contract CardManagerModuleTest is Test {
 	}
 
 	function testTransferBadVendor() public {
+		bytes32 cardHash = keccak256(abi.encodePacked(instanceId, tagSerials[0], address(cardManagerModule)));
+
 		bytes memory initCode = bytes("");
 
 		bytes memory transferData = abi.encodeWithSignature(
-			"withdraw(bytes32,uint256,address,address,uint256)",
+			"withdraw(bytes32,bytes32,address,address,uint256)",
 			instanceId,
-			tagSerials[0],
+			cardHash,
 			address(token),
 			badVendor,
 			100000000
@@ -245,17 +257,46 @@ contract CardManagerModuleTest is Test {
 		assertEq(token.balanceOf(badVendor), 0, "Balance should be 0");
 	}
 
+	function testTransferBadInstance() public {
+		bytes32 cardHash = keccak256(abi.encodePacked(instanceId, tagSerials[0], address(cardManagerModule)));
+
+		bytes memory initCode = bytes("");
+
+		bytes memory transferData = abi.encodeWithSignature(
+			"withdraw(bytes32,bytes32,address,address,uint256)",
+			keccak256(abi.encodePacked("4815162343")),
+			cardHash,
+			address(token),
+			vendor,
+			100000000
+		);
+
+		UserOperation memory userOp = createUserOperation(vendor, initCode, transferData);
+
+		
+
+		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, vendorPrivateKey);
+
+		vm.expectRevert(abi.encodePacked("CM12 Instance does not exist"));
+		executeUserOp(userOp);
+
+		assertEq(token.balanceOf(tags[0]), 100000000, "Balance should be 100000000");
+		assertEq(token.balanceOf(vendor), 0, "Balance should be 0");
+	}
+
 	function testFreshTagTransfer() public {
-		address newTag = cardManagerModule.createCard(instanceId, 3);
+		bytes32 cardHash = keccak256(abi.encodePacked(instanceId, uint256(3), address(cardManagerModule)));
+
+		address newTag = cardManagerModule.getCardAddress(cardHash);
 
 		upgradeableCommunityTokenScript.mint(newTag, 100000000);
 
 		bytes memory initCode = bytes("");
 
 		bytes memory transferData = abi.encodeWithSignature(
-			"withdraw(bytes32,uint256,address,address,uint256)",
+			"withdraw(bytes32,bytes32,address,address,uint256)",
 			instanceId,
-			3,
+			cardHash,
 			address(token),
 			vendor,
 			100000000
