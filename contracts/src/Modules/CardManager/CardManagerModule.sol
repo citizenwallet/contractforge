@@ -59,6 +59,7 @@ contract CardManagerModule is
 
 	address public cardFactory;
 	mapping(bytes32 => address) public instanceOwners;
+	mapping(bytes32 => bytes) public instanceAuthorizedCalldata;
 	mapping(bytes32 => bool) public instancePaused;
 	uint256 public instanceCount;
 	int256 public cardCount;
@@ -106,7 +107,7 @@ contract CardManagerModule is
 		return instanceOwners[id];
 	}
 
-	function createInstance(bytes32 id) external {
+	function createInstance(bytes32 id, bytes memory authorizedCalldata) external {
 		if (instanceOwners[id] != address(0)) {
 			revert("CM10 Instance already exists");
 		}
@@ -114,8 +115,15 @@ contract CardManagerModule is
 		instanceCount++;
 
 		instanceOwners[id] = msg.sender;
-
+		instanceAuthorizedCalldata[id] = authorizedCalldata;
 		emit InstanceCreated(id, msg.sender);
+	}
+
+	function updateInstanceAuthorizedCalldata(
+		bytes32 id,
+		bytes memory authorizedCalldata
+	) external onlyInstanceOwner(id) {
+		instanceAuthorizedCalldata[id] = authorizedCalldata;
 	}
 
 	function pauseInstance(bytes32 id) external onlyInstanceOwner(id) {
@@ -198,19 +206,23 @@ contract CardManagerModule is
 	 * @dev Calculates the hash value for a given card.
 	 * This function should only be used to test hash values.
 	 *
-	 * @param serial The serial to be hashed.
+	 * @param id The id of the card.
+	 * @param hashedSerial The hashed serial of the card.
 	 * @return The calculated hash value.
 	 */
-	function getCardHash(uint256 serial) public view returns (bytes32) {
-		return keccak256(abi.encodePacked(serial, address(this)));
+	function getCardHash(bytes32 id, bytes32 hashedSerial) public view returns (bytes32) {
+		return keccak256(abi.encodePacked(id, hashedSerial, address(this)));
 	}
 
 	/**
 	 * @dev Creates a card.
-	 * @param cardHash The hash of the card.
+	 * @param id The id of the card.
+	 * @param hashedSerial The hashed serial of the card.
 	 * @return The address of the card.
 	 */
-	function createCard(bytes32 cardHash) public returns (address) {
+	function createCard(bytes32 id, bytes32 hashedSerial) public returns (address) {
+		bytes32 cardHash = getCardHash(id, hashedSerial);
+
 		(uint256 cardNonce, address cardAddress) = _getCardNonceAndAddress(cardHash);
 		if (contractExists(cardAddress)) {
 			return cardAddress;
@@ -227,10 +239,13 @@ contract CardManagerModule is
 
 	/**
 	 * @dev Retrieves the address of a card.
-	 * @param cardHash The hash of the card.
+	 * @param id The id of the card.
+	 * @param hashedSerial The hashed serial of the card.
 	 * @return The address of the card.
 	 */
-	function getCardAddress(bytes32 cardHash) public view returns (address) {
+	function getCardAddress(bytes32 id, bytes32 hashedSerial) public view returns (address) {
+		bytes32 cardHash = getCardHash(id, hashedSerial);
+
 		(, address cardAddress) = _getCardNonceAndAddress(cardHash);
 
 		return cardAddress;
@@ -251,8 +266,8 @@ contract CardManagerModule is
 	/////////////////////////////////////////////////
 	// CARD OWNERSHIP
 
-	function addOwner(bytes32 id, bytes32 cardHash, address newOwner) public onlyInstanceOwner(id) {
-		address cardAddress = getCardAddress(cardHash);
+	function addOwner(bytes32 id, bytes32 hashedSerial, address newOwner) public onlyInstanceOwner(id) {
+		address cardAddress = getCardAddress(id, hashedSerial);
 
 		if (!contractExists(cardAddress)) {
 			revert("CM33 Card is not created");
@@ -273,15 +288,15 @@ contract CardManagerModule is
 
 	function withdraw(
 		bytes32 id,
-		bytes32 cardHash,
+		bytes32 hashedSerial,
 		IERC20 token,
 		address to,
 		uint256 amount
 	) public onlyCreatedInstance(id) onlyWhitelisted(id, to) onlyUnpausedInstance(id) {
-		address cardAddress = getCardAddress(cardHash);
+		address cardAddress = getCardAddress(id, hashedSerial);
 
 		if (!contractExists(cardAddress)) {
-			createCard(cardHash);
+			createCard(id, hashedSerial);
 		}
 
 		bytes memory data = abi.encodeCall(ERC20.transfer, (to, amount));

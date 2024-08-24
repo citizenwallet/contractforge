@@ -119,13 +119,21 @@ contract CardManagerModuleTest is Test {
 		for (uint256 i = 0; i < numSafe; i++) {
 			tagSerials[i] = i;
 
-			bytes32 cardHash = keccak256(abi.encodePacked(i, address(cardManagerModule)));
+			bytes32 hashedSerial = keccak256(abi.encodePacked(i));
 
 			// create the tags
-			tags[i] = cardManagerModule.createCard(cardHash);
+			tags[i] = cardManagerModule.createCard(instanceId, hashedSerial);
 		}
 
-		cardManagerModule.createInstance(instanceId);
+		bytes memory authorizedCalldata = abi.encodeWithSignature(
+			"withdraw(bytes32,bytes32,address,address,uint256)",
+			instanceId,
+			keccak256(abi.encodePacked(bytes(""))),
+			address(token),
+			address(0),
+			0
+		);
+		cardManagerModule.createInstance(instanceId, authorizedCalldata);
 
 		address[] memory whitelist = new address[](1);
 		whitelist[0] = vendor;
@@ -168,8 +176,9 @@ contract CardManagerModuleTest is Test {
 	}
 
 	function testCardHash() public {
-		bytes32 cardHash = keccak256(abi.encodePacked(uint256(3), address(cardManagerModule)));
-		bytes32 cardHash2 = cardManagerModule.getCardHash(uint256(3));
+		bytes32 hashedSerial = keccak256(abi.encodePacked(uint256(3)));
+		bytes32 cardHash = keccak256(abi.encodePacked(instanceId, hashedSerial, address(cardManagerModule)));
+		bytes32 cardHash2 = cardManagerModule.getCardHash(instanceId, hashedSerial);
 		assertEq(cardHash, cardHash2, "Local card hash should be the same as the one returned by the contract");
 	}
 
@@ -208,14 +217,14 @@ contract CardManagerModuleTest is Test {
 	}
 
 	function testTransfer() public {
-		bytes32 cardHash = keccak256(abi.encodePacked(tagSerials[0], address(cardManagerModule)));
+		bytes32 hashedSerial = keccak256(abi.encodePacked(tagSerials[0]));
 
 		bytes memory initCode = bytes("");
 
 		bytes memory transferData = abi.encodeWithSignature(
 			"withdraw(bytes32,bytes32,address,address,uint256)",
 			instanceId,
-			cardHash,
+			hashedSerial,
 			address(token),
 			vendor,
 			100000000
@@ -233,14 +242,14 @@ contract CardManagerModuleTest is Test {
 	}
 
 	function testTransferBadVendor() public {
-		bytes32 cardHash = keccak256(abi.encodePacked(tagSerials[0], address(cardManagerModule)));
+		bytes32 hashedSerial = keccak256(abi.encodePacked(tagSerials[0]));
 
 		bytes memory initCode = bytes("");
 
 		bytes memory transferData = abi.encodeWithSignature(
 			"withdraw(bytes32,bytes32,address,address,uint256)",
 			instanceId,
-			cardHash,
+			hashedSerial,
 			address(token),
 			badVendor,
 			100000000
@@ -258,14 +267,14 @@ contract CardManagerModuleTest is Test {
 	}
 
 	function testTransferBadInstance() public {
-		bytes32 cardHash = keccak256(abi.encodePacked(tagSerials[0], address(cardManagerModule)));
+		bytes32 hashedSerial = keccak256(abi.encodePacked(tagSerials[0]));
 
 		bytes memory initCode = bytes("");
 
 		bytes memory transferData = abi.encodeWithSignature(
 			"withdraw(bytes32,bytes32,address,address,uint256)",
 			keccak256(abi.encodePacked("4815162343")),
-			cardHash,
+			hashedSerial,
 			address(token),
 			vendor,
 			100000000
@@ -285,9 +294,9 @@ contract CardManagerModuleTest is Test {
 	}
 
 	function testFreshTagTransfer() public {
-		bytes32 cardHash = keccak256(abi.encodePacked(uint256(3), address(cardManagerModule)));
+		bytes32 hashedSerial = keccak256(abi.encodePacked(uint256(3)));
 
-		address newTag = cardManagerModule.getCardAddress(cardHash);
+		address newTag = cardManagerModule.getCardAddress(instanceId, hashedSerial);
 
 		upgradeableCommunityTokenScript.mint(newTag, 100000000);
 
@@ -296,7 +305,7 @@ contract CardManagerModuleTest is Test {
 		bytes memory transferData = abi.encodeWithSignature(
 			"withdraw(bytes32,bytes32,address,address,uint256)",
 			instanceId,
-			cardHash,
+			hashedSerial,
 			address(token),
 			vendor,
 			100000000
