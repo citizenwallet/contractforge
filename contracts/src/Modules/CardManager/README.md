@@ -18,7 +18,7 @@ The Card Manager Safe Module is a powerful and flexible system for managing digi
 
 ## Main Functions
 
-- `createInstance(bytes32 id)`: Create a new instance with a unique identifier.
+- `createInstance(bytes32 id, address[] memory tokens)`: Create a new instance with a unique identifier.
 - `getCardAddress(bytes32 id, bytes32 hashedSerial)`: Returns the address of a card for a given instance and hashed serial number without creating it.
 - `createCard(bytes32 id, bytes32 hashedSerial)`: Generate a new card (Safe) for a given instance and hashed serial number.
 - `updateWhitelist(bytes32 id, address[] memory addresses)`: Update the whitelist for a specific instance with the provided addresses.
@@ -35,6 +35,14 @@ The Card Manager Safe Module is a powerful and flexible system for managing digi
 
 ## Usage
 
-This module is designed to be integrated with Safe contracts, providing a robust system for managing digital cards with controlled access and operations.
+- Create an instance using any EOA or Smart Contract Account
+- Add instance to POS app in order to get a vendor EOA and associated address
+- Add vendor to instance whitelist
+- Start scanning tags with the POS app
+- View card details in web view
 
-For detailed implementation and integration guidelines, please refer to the source code and associated documentation.
+In theory, any hash serial can work as the seed for the card. So NFC tags are not a requirement. A bar code or qr code could work.
+
+The advantage of NFC is that the serial number is only readable with proximity to the tag.
+
+
