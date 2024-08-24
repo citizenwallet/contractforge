@@ -124,7 +124,8 @@ contract CardManagerModule is
 		instanceTokens[id] = tokens;
 	}
 
-	function authorizeNewInstance(bytes32 id, bytes32 newInstanceId, address cardAddress) external onlyInstanceOwner(id) {
+	function authorizeNewInstance(bytes32 id, bytes32 newInstanceId, bytes32 hashedSerial) external onlyInstanceOwner(id) onlyAuthorizedInstance(id, hashedSerial) {
+		address cardAddress = getCardAddress(id, hashedSerial);
 		authorizedInstances[cardAddress][newInstanceId] = true;
 	}
 
