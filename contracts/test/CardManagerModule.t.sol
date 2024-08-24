@@ -119,7 +119,7 @@ contract CardManagerModuleTest is Test {
 		for (uint256 i = 0; i < numSafe; i++) {
 			tagSerials[i] = i;
 
-			bytes32 cardHash = keccak256(abi.encodePacked(instanceId, i, address(cardManagerModule)));
+			bytes32 cardHash = keccak256(abi.encodePacked(i, address(cardManagerModule)));
 
 			// create the tags
 			tags[i] = cardManagerModule.createCard(cardHash);
@@ -168,8 +168,8 @@ contract CardManagerModuleTest is Test {
 	}
 
 	function testCardHash() public {
-		bytes32 cardHash = keccak256(abi.encodePacked(instanceId, uint256(3), address(cardManagerModule)));
-		bytes32 cardHash2 = cardManagerModule.getCardHash(instanceId, uint256(3));
+		bytes32 cardHash = keccak256(abi.encodePacked(uint256(3), address(cardManagerModule)));
+		bytes32 cardHash2 = cardManagerModule.getCardHash(uint256(3));
 		assertEq(cardHash, cardHash2, "Local card hash should be the same as the one returned by the contract");
 	}
 
@@ -208,7 +208,7 @@ contract CardManagerModuleTest is Test {
 	}
 
 	function testTransfer() public {
-		bytes32 cardHash = keccak256(abi.encodePacked(instanceId, tagSerials[0], address(cardManagerModule)));
+		bytes32 cardHash = keccak256(abi.encodePacked(tagSerials[0], address(cardManagerModule)));
 
 		bytes memory initCode = bytes("");
 
@@ -233,7 +233,7 @@ contract CardManagerModuleTest is Test {
 	}
 
 	function testTransferBadVendor() public {
-		bytes32 cardHash = keccak256(abi.encodePacked(instanceId, tagSerials[0], address(cardManagerModule)));
+		bytes32 cardHash = keccak256(abi.encodePacked(tagSerials[0], address(cardManagerModule)));
 
 		bytes memory initCode = bytes("");
 
@@ -258,7 +258,7 @@ contract CardManagerModuleTest is Test {
 	}
 
 	function testTransferBadInstance() public {
-		bytes32 cardHash = keccak256(abi.encodePacked(instanceId, tagSerials[0], address(cardManagerModule)));
+		bytes32 cardHash = keccak256(abi.encodePacked(tagSerials[0], address(cardManagerModule)));
 
 		bytes memory initCode = bytes("");
 
@@ -285,7 +285,7 @@ contract CardManagerModuleTest is Test {
 	}
 
 	function testFreshTagTransfer() public {
-		bytes32 cardHash = keccak256(abi.encodePacked(instanceId, uint256(3), address(cardManagerModule)));
+		bytes32 cardHash = keccak256(abi.encodePacked(uint256(3), address(cardManagerModule)));
 
 		address newTag = cardManagerModule.getCardAddress(cardHash);
 

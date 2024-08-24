@@ -198,12 +198,11 @@ contract CardManagerModule is
 	 * @dev Calculates the hash value for a given card.
 	 * This function should only be used to test hash values.
 	 *
-	 * @param id The id of the instance.
 	 * @param serial The serial to be hashed.
 	 * @return The calculated hash value.
 	 */
-	function getCardHash(bytes32 id, uint256 serial) public view returns (bytes32) {
-		return keccak256(abi.encodePacked(id, serial, address(this)));
+	function getCardHash(uint256 serial) public view returns (bytes32) {
+		return keccak256(abi.encodePacked(serial, address(this)));
 	}
 
 	/**
