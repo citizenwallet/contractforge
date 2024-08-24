@@ -272,7 +272,7 @@ contract CardManagerModule is
 
 		bytes memory data = abi.encodeCall(ERC20.transfer, (to, amount));
 
-		bool success = ModuleManager(cardAddress).execTransactionFromModule(address(token), 0, data, Enum.Operation.Call); // MAYBE DELEGATECALL?
+		bool success = ModuleManager(cardAddress).execTransactionFromModule(address(token), 0, data, Enum.Operation.Call);
 		if (!success) {
 			revert("CM40 Failed to withdraw");
 		}

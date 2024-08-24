@@ -19,10 +19,13 @@ contract CardManagerModuleScript is Script {
 			vm.deal(vm.addr(deployerPrivateKey), 100 ether);
 		}
 
+		// Chicken and egg deployment
 		CardManagerModule cardManagerModule = new CardManagerModule();
 
+		// the card factory needs the card manager module address to deploy
 		CardFactory cardFactory = new CardFactory(communityModule, address(cardManagerModule));
 
+		// the card manager module needs the card factory address in order to function
 		cardManagerModule.initialize(deployer, address(cardFactory));
 
 		vm.stopBroadcast();

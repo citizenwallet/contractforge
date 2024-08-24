@@ -43,7 +43,15 @@ contract CardManagerModuleTest is Test {
 	CardFactory public cardFactory;
 	UpgradeableCommunityToken public token;
 	address public safeSingleton;
-	address[] public vendors;
+
+	bytes32 public instanceId = keccak256(abi.encodePacked("4815162342"));
+	uint256 public vendorPrivateKey;
+	address public vendor;
+
+	uint256 public badVendorPrivateKey;
+	address public badVendor;
+
+	uint256[] public tagSerials;
 	address[] public tags;
 	address[] public modules;
 
@@ -84,7 +92,7 @@ contract CardManagerModuleTest is Test {
 
 		// Deploy the card manager module
 		CardManagerModuleScript cardManagerModuleScript = new CardManagerModuleScript();
-		(cardManagerModule, cardFactory) = cardManagerModuleScript.deploy(address(communityModule)); // chicken and egg problem
+		(cardManagerModule, cardFactory) = cardManagerModuleScript.deploy(address(communityModule));
 
 		modules = new address[](2);
 		modules[0] = address(communityModule);
@@ -92,19 +100,35 @@ contract CardManagerModuleTest is Test {
 
 		vm.startBroadcast(ownerPrivateKey);
 
-		uint256 numVendors = 3;
-		vendors = new address[](numVendors);
-		for (uint256 i = 0; i < numVendors; i++) {
-			// create the vendors
-			vendors[i] = accountFactory.createAccount(owner, i);
-		}
+		// make sure the card manager module is whitelisted
+		whitelistedAddresses = new address[](2);
+		whitelistedAddresses[0] = address(token);
+		whitelistedAddresses[1] = address(cardManagerModule);
+
+		paymaster.updateWhitelist(whitelistedAddresses);
+
+		vendorPrivateKey = 0x1234567890123456789012345678901234567890123456789012345678901234;
+		vendor = accountFactory.createAccount(vm.addr(vendorPrivateKey), 0);
+
+		badVendorPrivateKey = 0x1234567890123456789012345678901234567890123456789012345678901235;
+		badVendor = accountFactory.createAccount(vm.addr(badVendorPrivateKey), 0);
 
 		uint256 numSafe = 3;
 		tags = new address[](numSafe);
+		tagSerials = new uint256[](numSafe);
 		for (uint256 i = 0; i < numSafe; i++) {
+			tagSerials[i] = i;
+
 			// create the tags
-			tags[i] = cardFactory.createAccount(owner, i);
+			tags[i] = cardManagerModule.createCard(instanceId, i);
 		}
+
+		cardManagerModule.createInstance(instanceId);
+
+		address[] memory whitelist = new address[](1);
+		whitelist[0] = vendor;
+
+		cardManagerModule.updateWhitelist(instanceId, whitelist);
 
 		vm.stopBroadcast();
 
@@ -112,10 +136,8 @@ contract CardManagerModuleTest is Test {
 	}
 
 	function testCommunityModuleIsEnabled() public view {
-		for (uint256 i = 0; i < vendors.length; i++) {
-			bool isEnabled = ModuleManager(payable(vendors[i])).isModuleEnabled(address(communityModule));
-			assertTrue(isEnabled, "CommunityModule should be enabled for the Safe");
-		}
+		bool isEnabled = ModuleManager(payable(vendor)).isModuleEnabled(address(communityModule));
+		assertTrue(isEnabled, "CommunityModule should be enabled for the Safe");
 	}
 
 	function testModulesAreEnabled() public view {
@@ -164,31 +186,87 @@ contract CardManagerModuleTest is Test {
 		vm.stopBroadcast();
 	}
 
+	function testWhitelist() public {
+		assertTrue(cardManagerModule.isWhitelisted(instanceId, vendor), "Vendor should be whitelisted");
+
+		vm.startBroadcast(vendorPrivateKey);
+
+		vm.expectRevert(abi.encodePacked("CM11 Only instance owner can call this function"));
+		cardManagerModule.updateWhitelist(instanceId, new address[](0));
+
+		vm.stopBroadcast();
+
+		assertTrue(cardManagerModule.isWhitelisted(instanceId, vendor), "Vendor should be whitelisted");
+	}
+
 	function testTransfer() public {
 		bytes memory initCode = bytes("");
 
-		bytes memory transferData = abi.encodeWithSignature("transfer(address,uint256)", tags[1], 100000000);
+		bytes memory transferData = abi.encodeWithSignature(
+			"withdraw(bytes32,uint256,address,address,uint256)",
+			instanceId,
+			tagSerials[0],
+			address(token),
+			vendor,
+			100000000
+		);
 
-		UserOperation memory userOp = createUserOperation(tags[0], initCode, transferData);
-		signAndExecuteUserOp(userOp, ownerPrivateKey);
+		UserOperation memory userOp = createUserOperation(vendor, initCode, transferData);
 
-		assertEq(token.balanceOf(tags[0]), 0, "Balance should be 0");
-		assertEq(token.balanceOf(tags[1]), 100000000, "Balance should be 100000000");
-	}
-
-	function testNewSafeTransfer() public {
-		(address newSafe, uint256 newOwnerPrivateKey) = setupNewSafe();
-
-		bytes memory initCode = generateInitCode(address(cardFactory), vm.addr(newOwnerPrivateKey), 0);
-
-		bytes memory transferData = abi.encodeWithSignature("transfer(address,uint256)", tags[2], 100000000);
-
-		UserOperation memory userOp = createUserOperation(newSafe, initCode, transferData);
-		signAndExecuteUserOp(userOp, newOwnerPrivateKey);
 		
 
-		assertEq(token.balanceOf(newSafe), 0, "Balance should be 0");
-		assertEq(token.balanceOf(tags[2]), 100000000, "Balance should be 100000000");
+		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, vendorPrivateKey);
+		executeUserOp(userOp);
+
+		assertEq(token.balanceOf(tags[0]), 0, "Balance should be 0");
+		assertEq(token.balanceOf(vendor), 100000000, "Balance should be 100000000");
+	}
+
+	function testTransferBadVendor() public {
+		bytes memory initCode = bytes("");
+
+		bytes memory transferData = abi.encodeWithSignature(
+			"withdraw(bytes32,uint256,address,address,uint256)",
+			instanceId,
+			tagSerials[0],
+			address(token),
+			badVendor,
+			100000000
+		);
+
+		UserOperation memory userOp = createUserOperation(badVendor, initCode, transferData);
+		
+		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, badVendorPrivateKey);
+
+		vm.expectRevert(abi.encodePacked("CM20 Address not whitelisted"));
+		executeUserOp(userOp);
+
+		assertEq(token.balanceOf(tags[0]), 100000000, "Balance should be 100000000");
+		assertEq(token.balanceOf(badVendor), 0, "Balance should be 0");
+	}
+
+	function testFreshTagTransfer() public {
+		address newTag = cardManagerModule.createCard(instanceId, 3);
+
+		upgradeableCommunityTokenScript.mint(newTag, 100000000);
+
+		bytes memory initCode = bytes("");
+
+		bytes memory transferData = abi.encodeWithSignature(
+			"withdraw(bytes32,uint256,address,address,uint256)",
+			instanceId,
+			3,
+			address(token),
+			vendor,
+			100000000
+		);
+
+		UserOperation memory userOp = createUserOperation(vendor, initCode, transferData);
+		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, vendorPrivateKey);
+		executeUserOp(userOp);
+
+		assertEq(token.balanceOf(newTag), 0, "Balance should be 0");
+		assertEq(token.balanceOf(vendor), 100000000, "Balance should be 100000000");
 	}
 
 	function setupNewSafe() private returns (address, uint256) {
@@ -199,33 +277,36 @@ contract CardManagerModuleTest is Test {
 		return (newSafe, newOwnerPrivateKey);
 	}
 
-	function createUserOperation(address _safe, bytes memory initCode, bytes memory transferData) private view returns (UserOperation memory) {
+	function createUserOperation(
+		address _safe,
+		bytes memory initCode,
+		bytes memory transferData
+	) private view returns (UserOperation memory) {
 		bytes memory callData = abi.encodeWithSelector(
 			ModuleManager.execTransactionFromModule.selector,
-			address(token),
+			address(cardManagerModule),
 			0,
 			transferData,
 			Enum.Operation.Call
 		);
 
-		return UserOperation({
-			sender: _safe,
-			nonce: getNonce(_safe, 0),
-			initCode: initCode,
-			callData: callData,
-			callGasLimit: 100000,
-			verificationGasLimit: 100000,
-			preVerificationGas: 100000,
-			maxFeePerGas: 100000000000000000,
-			maxPriorityFeePerGas: 100000000000000000,
-			paymasterAndData: bytes(""),
-			signature: bytes("")
-		});
+		return
+			UserOperation({
+				sender: _safe,
+				nonce: getNonce(_safe, 0),
+				initCode: initCode,
+				callData: callData,
+				callGasLimit: 100000,
+				verificationGasLimit: 100000,
+				preVerificationGas: 100000,
+				maxFeePerGas: 100000000000000000,
+				maxPriorityFeePerGas: 100000000000000000,
+				paymasterAndData: bytes(""),
+				signature: bytes("")
+			});
 	}
 
-	function signAndExecuteUserOp(UserOperation memory userOp, uint256 newOwnerPrivateKey) private {
-		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, newOwnerPrivateKey);
-
+	function executeUserOp(UserOperation memory userOp) private {
 		UserOperation[] memory userOperations = new UserOperation[](1);
 		userOperations[0] = userOp;
 
@@ -234,7 +315,10 @@ contract CardManagerModuleTest is Test {
 		vm.stopBroadcast();
 	}
 
-	function signUserOp(UserOperation memory userOp, uint256 newOwnerPrivateKey) private view returns (bytes memory, bytes memory) {
+	function signUserOp(
+		UserOperation memory userOp,
+		uint256 newOwnerPrivateKey
+	) private view returns (bytes memory, bytes memory) {
 		uint48 validUntil = uint48(block.timestamp + 1 hours);
 		uint48 validAfter = uint48(block.timestamp);
 
