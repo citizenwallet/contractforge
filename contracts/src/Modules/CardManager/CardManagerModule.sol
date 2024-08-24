@@ -120,7 +120,7 @@ contract CardManagerModule is
 		emit InstanceCreated(id, msg.sender);
 	}
 
-	function updateInstanceToken(bytes32 id, address[] memory tokens) external onlyInstanceOwner(id) {
+	function updateInstanceTokens(bytes32 id, address[] memory tokens) external onlyInstanceOwner(id) {
 		instanceTokens[id] = tokens;
 	}
 
