@@ -42,6 +42,7 @@ contract CardManagerModuleTest is Test {
 	AccountFactory public accountFactory;
 	CardFactory public cardFactory;
 	UpgradeableCommunityToken public token;
+	UpgradeableCommunityToken public token2;
 	address public safeSingleton;
 
 	bytes32 public instanceId = keccak256(abi.encodePacked("4815162342"));
@@ -78,6 +79,7 @@ contract CardManagerModuleTest is Test {
 
 		// Deploy the community module
 		upgradeableCommunityTokenScript = new UpgradeableCommunityTokenScript();
+		token2 = upgradeableCommunityTokenScript.deploy();
 		token = upgradeableCommunityTokenScript.deploy();
 
 		address[] memory whitelistedAddresses = new address[](1);
@@ -101,9 +103,10 @@ contract CardManagerModuleTest is Test {
 		vm.startBroadcast(ownerPrivateKey);
 
 		// make sure the card manager module is whitelisted
-		whitelistedAddresses = new address[](2);
+		whitelistedAddresses = new address[](3);
 		whitelistedAddresses[0] = address(token);
-		whitelistedAddresses[1] = address(cardManagerModule);
+		whitelistedAddresses[1] = address(token2);
+		whitelistedAddresses[2] = address(cardManagerModule);
 
 		paymaster.updateWhitelist(whitelistedAddresses);
 
@@ -125,15 +128,10 @@ contract CardManagerModuleTest is Test {
 			tags[i] = cardManagerModule.createCard(instanceId, hashedSerial);
 		}
 
-		bytes memory authorizedCalldata = abi.encodeWithSignature(
-			"withdraw(bytes32,bytes32,address,address,uint256)",
-			instanceId,
-			keccak256(abi.encodePacked(bytes(""))),
-			address(token),
-			address(0),
-			0
-		);
-		cardManagerModule.createInstance(instanceId, authorizedCalldata);
+		address[] memory authorizedTokens = new address[](1);
+		authorizedTokens[0] = address(token);
+
+		cardManagerModule.createInstance(instanceId, authorizedTokens);
 
 		address[] memory whitelist = new address[](1);
 		whitelist[0] = vendor;
@@ -175,7 +173,7 @@ contract CardManagerModuleTest is Test {
 		assertEq(safeA, counterFactualSafeA, "Account factory address should be that of deployed account factory");
 	}
 
-	function testCardHash() public {
+	function testCardHash() public view {
 		bytes32 hashedSerial = keccak256(abi.encodePacked(uint256(3)));
 		bytes32 cardHash = keccak256(abi.encodePacked(instanceId, hashedSerial, address(cardManagerModule)));
 		bytes32 cardHash2 = cardManagerModule.getCardHash(instanceId, hashedSerial);
@@ -239,6 +237,28 @@ contract CardManagerModuleTest is Test {
 
 		assertEq(token.balanceOf(tags[0]), 0, "Balance should be 0");
 		assertEq(token.balanceOf(vendor), 100000000, "Balance should be 100000000");
+	}
+
+	function testTransferBadToken() public {
+		bytes32 hashedSerial = keccak256(abi.encodePacked(tagSerials[0]));
+
+		bytes memory initCode = bytes("");
+
+		bytes memory transferData = abi.encodeWithSignature(
+			"withdraw(bytes32,bytes32,address,address,uint256)",
+			instanceId,
+			hashedSerial,
+			address(token2),
+			vendor,
+			100000000
+		);
+
+		UserOperation memory userOp = createUserOperation(vendor, initCode, transferData);
+
+		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, vendorPrivateKey);
+
+		vm.expectRevert(abi.encodePacked("CM16 Token is not authorized for this instance"));
+		executeUserOp(userOp);
 	}
 
 	function testTransferBadVendor() public {

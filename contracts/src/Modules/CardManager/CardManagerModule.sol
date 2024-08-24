@@ -59,10 +59,11 @@ contract CardManagerModule is
 
 	address public cardFactory;
 	mapping(bytes32 => address) public instanceOwners;
-	mapping(bytes32 => bytes) public instanceAuthorizedCalldata;
+	mapping(bytes32 => address[]) public instanceTokens;
 	mapping(bytes32 => bool) public instancePaused;
 	uint256 public instanceCount;
 	int256 public cardCount;
+	mapping(address => mapping(bytes32 => bool)) public authorizedInstances;
 
 	mapping(bytes32 => uint256) private _whitelistVersion;
 	mapping(bytes32 => mapping(address => uint256)) private _whitelist;
@@ -107,7 +108,7 @@ contract CardManagerModule is
 		return instanceOwners[id];
 	}
 
-	function createInstance(bytes32 id, bytes memory authorizedCalldata) external {
+	function createInstance(bytes32 id, address[] memory tokens) external {
 		if (instanceOwners[id] != address(0)) {
 			revert("CM10 Instance already exists");
 		}
@@ -115,15 +116,16 @@ contract CardManagerModule is
 		instanceCount++;
 
 		instanceOwners[id] = msg.sender;
-		instanceAuthorizedCalldata[id] = authorizedCalldata;
+		instanceTokens[id] = tokens;
 		emit InstanceCreated(id, msg.sender);
 	}
 
-	function updateInstanceAuthorizedCalldata(
-		bytes32 id,
-		bytes memory authorizedCalldata
-	) external onlyInstanceOwner(id) {
-		instanceAuthorizedCalldata[id] = authorizedCalldata;
+	function updateInstanceToken(bytes32 id, address[] memory tokens) external onlyInstanceOwner(id) {
+		instanceTokens[id] = tokens;
+	}
+
+	function authorizeNewInstance(bytes32 id, bytes32 newInstanceId, address cardAddress) external onlyInstanceOwner(id) {
+		authorizedInstances[cardAddress][newInstanceId] = true;
 	}
 
 	function pauseInstance(bytes32 id) external onlyInstanceOwner(id) {
@@ -155,6 +157,32 @@ contract CardManagerModule is
 	modifier onlyUnpausedInstance(bytes32 id) {
 		if (instancePaused[id]) {
 			revert("CM13 Instance is paused");
+		}
+		_;
+	}
+
+	modifier onlyAuthorizedInstance(bytes32 id, bytes32 hashedSerial) {
+		address cardAddress = getCardAddress(id, hashedSerial);
+		if (!authorizedInstances[cardAddress][id]) {
+			revert("CM14 Instance is not authorized");
+		}
+		_;
+	}
+
+	modifier onlyInstanceToken(bytes32 id, IERC20 token) {
+		if (instanceTokens[id].length == 0) {
+			revert("CM15 No tokens authorized for this instance");
+		}
+
+		bool isTokenAuthorized = false;
+		for (uint256 i = 0; i < instanceTokens[id].length; i++) {
+			if (instanceTokens[id][i] == address(token)) {
+				isTokenAuthorized = true;
+				break;
+			}
+		}
+		if (!isTokenAuthorized) {
+			revert("CM16 Token is not authorized for this instance");
 		}
 		_;
 	}
@@ -229,6 +257,7 @@ contract CardManagerModule is
 		}
 
 		cardCount++;
+		authorizedInstances[cardAddress][id] = true;
 
 		CardFactory(cardFactory).createAccount(address(this), cardNonce);
 
@@ -266,7 +295,11 @@ contract CardManagerModule is
 	/////////////////////////////////////////////////
 	// CARD OWNERSHIP
 
-	function addOwner(bytes32 id, bytes32 hashedSerial, address newOwner) public onlyInstanceOwner(id) {
+	function addOwner(
+		bytes32 id,
+		bytes32 hashedSerial,
+		address newOwner
+	) public onlyInstanceOwner(id) onlyAuthorizedInstance(id, hashedSerial) {
 		address cardAddress = getCardAddress(id, hashedSerial);
 
 		if (!contractExists(cardAddress)) {
@@ -277,14 +310,14 @@ contract CardManagerModule is
 
 		bytes memory data = abi.encodeCall(OwnerManager.addOwnerWithThreshold, (newOwner, threshold));
 
-		bool success = ModuleManager(cardAddress).execTransactionFromModule(cardAddress, 0, data, Enum.Operation.Call); // MAYBE DELEGATECALL?
+		bool success = ModuleManager(cardAddress).execTransactionFromModule(cardAddress, 0, data, Enum.Operation.Call);
 		if (!success) {
 			revert("CM34 Failed to add owner");
 		}
 	}
 
 	/////////////////////////////////////////////////
-	// FUND WITHDRAWAL
+	// Execute on Card
 
 	function withdraw(
 		bytes32 id,
@@ -292,12 +325,33 @@ contract CardManagerModule is
 		IERC20 token,
 		address to,
 		uint256 amount
-	) public onlyCreatedInstance(id) onlyWhitelisted(id, to) onlyUnpausedInstance(id) {
+	)
+		public
+		onlyCreatedInstance(id)
+		onlyInstanceToken(id, token)
+		onlyWhitelisted(id, to)
+		onlyUnpausedInstance(id)
+	{
 		address cardAddress = getCardAddress(id, hashedSerial);
 
 		if (!contractExists(cardAddress)) {
 			createCard(id, hashedSerial);
 		}
+
+		_withdraw(id, hashedSerial, token, to, amount);
+	}
+
+	function _withdraw(
+		bytes32 id,
+		bytes32 hashedSerial,
+		IERC20 token,
+		address to,
+		uint256 amount
+	)
+		internal
+		onlyAuthorizedInstance(id, hashedSerial)
+	{
+		address cardAddress = getCardAddress(id, hashedSerial);
 
 		bytes memory data = abi.encodeCall(ERC20.transfer, (to, amount));
 
