@@ -19,10 +19,10 @@ The Card Manager Safe Module is a powerful and flexible system for managing digi
 ## Main Functions
 
 - `createInstance(bytes32 id)`: Create a new instance with a unique identifier.
+- `getCardAddress(bytes32 id, bytes32 hashedSerial)`: Returns the address of a card for a given instance and hashed serial number without creating it.
 - `createCard(bytes32 id, bytes32 hashedSerial)`: Generate a new card (Safe) for a given instance and hashed serial number.
-- `addToWhitelist(bytes32 id, address account)`: Add an account to the whitelist for a specific instance.
-- `removeFromWhitelist(bytes32 id, address account)`: Remove an account from the whitelist of an instance.
-- `authorizeToken(bytes32 id, address token)`: Authorize a token for withdrawals in a specific instance.
+- `updateWhitelist(bytes32 id, address[] memory addresses)`: Update the whitelist for a specific instance with the provided addresses.
+- `updateInstanceTokens(bytes32 id, address[] memory tokens)`: Update the list of authorized tokens for withdrawals in a specific instance.
 - `withdraw(bytes32 id, bytes32 hashedSerial, IERC20 token, address to, uint256 amount)`: Allow whitelisted accounts to withdraw authorized tokens from cards.
 
 ## Security Considerations
