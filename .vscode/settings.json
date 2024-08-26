@@ -12,24 +12,23 @@
   "solidity.solhintRules": {
     "extends": "solhint:recommended",
     "rules": {
-      "indent": ["error", 4],
       "max-line-length": "off",
       "no-empty-blocks": "off",
       "func-order": "off",
       "not-rely-on-time": "off",
       "avoid-low-level-calls": "warn",
-      "compiler-version": ["error", "^0.8.23"],
+      "compiler-version": ["error", "^0.8.20"],
       "no-console": "warn"
     },
     "avoid-sha3": "warn"
   },
-  "prettier.configPath": "./contracts/.prettierrc",
+  "prettier.configPath": ".prettierrc",
   "solidity.remappings": [
     "@openzeppelin/contracts/=lib/openzeppelin-contracts-upgradeable/lib/openzeppelin-contracts/contracts/",
     "@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/",
     "@account-abstraction/contracts/=/lib/account-abstraction/contracts/",
     "@cloned/entrypoint/=/cloned/EntryPoint/src/",
-    "@openzeppelin-no-upgrade/contracts/=lib/openzeppelin-contracts/contracts/",
+    "@openzeppelin-no-upgrade/contracts/=lib/openzeppelin-contracts/contracts/"
   ],
-  "solidity.compileUsingRemoteVersion": "v0.8.23+commit.f704f362"
+  "solidity.compileUsingRemoteVersion": "v0.8.20+commit.a1b79de6"
 }
