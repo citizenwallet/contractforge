@@ -1,24 +1,6 @@
 [submodule "lib/forge-std"]
 	path = lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
-[submodule "contracts/lib/openzeppelin-contracts-upgradeable"]
-	path = contracts/lib/openzeppelin-contracts-upgradeable
-	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
-[submodule "contracts/lib/openzeppelin-contracts"]
-	path = contracts/lib/openzeppelin-contracts
-	url = https://github.com/OpenZeppelin/openzeppelin-contracts
-[submodule "contracts/lib/account-abstraction"]
-	path = contracts/lib/account-abstraction
-	url = https://github.com/eth-infinitism/account-abstraction
-[submodule "contracts/EntryPoint/lib/forge-std"]
-	path = contracts/EntryPoint/lib/forge-std
-	url = https://github.com/foundry-rs/forge-std
-[submodule "contracts/lib/openzeppelin-foundry-upgrades"]
-	path = contracts/lib/openzeppelin-foundry-upgrades
-	url = https://github.com/OpenZeppelin/openzeppelin-foundry-upgrades
-[submodule "contracts/lib/safe-smart-account"]
-	path = contracts/lib/safe-smart-account
-	url = https://github.com/safe-global/safe-smart-account
 [submodule "lib/openzeppelin-contracts-upgradeable"]
 	path = lib/openzeppelin-contracts-upgradeable
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
