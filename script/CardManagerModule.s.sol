@@ -30,6 +30,9 @@ contract CardManagerModuleScript is Script {
 
 		vm.stopBroadcast();
 
+		console.log("CardManagerModule created at: ", address(cardManagerModule));
+		console.log("CardFactory created at: ", address(cardFactory));
+
 		return (cardManagerModule, cardFactory);
 	}
 

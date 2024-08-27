@@ -21,6 +21,8 @@ contract AccountFactoryScript is Script {
 
 		vm.stopBroadcast();
 
+		console.log("AccountFactory created at: ", address(accountFactory));
+
 		return accountFactory;
 	}
 
