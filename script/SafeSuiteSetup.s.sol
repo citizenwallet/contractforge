@@ -24,4 +24,4 @@ contract SafeSuiteSetupScript is Script, NetworkUtilsScript {
         // broadcast transaction bundle
         vm.stopBroadcast();
     }
-}
+} 
