@@ -14,5 +14,3 @@ docs/
 .env
 
 .anvil.log
-
-abi/
