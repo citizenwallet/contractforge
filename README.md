@@ -49,6 +49,8 @@ $ anvil
 
 ```shell
 $ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
+
+$ forge script script/anvil/CardManagerAnvil.s.sol:CardManagerAnvilScript --sig "deploy()"  --rpc-url http://127.0.0.1:8545
 ```
 
 ### Cast
@@ -63,4 +65,21 @@ $ cast <subcommand>
 $ forge --help
 $ anvil --help
 $ cast --help
+```
+
+Add `--broadcast` to the end of the following the actually publish.
+
+# Community Module + Paymaster
+```shell
+$ forge script script/CommunityModule.s.sol:CommunityModuleScript --sig "deploy(address[])" "[0x5815E61eF72c9E6107b5c5A05FD121F334f7a7f1,0x56Cc38bDa01bE6eC6D854513C995f6621Ee71229,0x37e40A8c3061Bd2cCa824E751768ed0Acd3C88fa]" --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --private-key $PRIVATE_KEY 
+```
+
+# Account Factory
+```shell
+$ forge script script/AccountFactory.s.sol:AccountFactoryScript --sig "deploy(address)" 0x061fdFcb266401cB9E9407fAbb64559751684f80 --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --private-key $PRIVATE_KEY 
+```
+
+# Card Manager
+```shell
+$ forge script script/CardManagerModule.s.sol:CardManagerModuleScript --sig "deploy(address)" 0x061fdFcb266401cB9E9407fAbb64559751684f80 --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --private-key $PRIVATE_KEY 
 ```
