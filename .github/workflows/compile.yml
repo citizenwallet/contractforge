@@ -1,0 +1,55 @@
+name: Compile Contracts
+
+on:
+  push:
+    branches: ["main"]
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compile-contracts:
+    runs-on: ubuntu-latest
+
+    permissions:
+      # Give the default GITHUB_TOKEN write permission to commit and push the changed files back to the repository.
+      contents: write
+
+    steps:
+        - uses: actions/checkout@v3
+          with:
+            submodules: recursive
+
+        - name: Install Foundry
+          uses: foundry-rs/foundry-toolchain@v1
+          with:
+            version: nightly
+
+        - name: Run tests
+          run: forge test -vvv
+
+        - name: Build contracts
+          run: forge build
+
+        - name: Compile ABI
+          run: bash script/compile.sh
+
+        - name: Commit changes
+          run: |
+            git config --local user.email "bot@citizenwallet.xyz"
+            git config --local user.name "citizenwallet-bot"
+
+        - uses: phish108/autotag-action@v1.1.55
+          id: tagger
+          with:
+              github-token: ${{ secrets.GITHUB_TOKEN}}
+              with-v: "true"
+              dry-run: "true"
+    
+        - uses: stefanzweifel/git-auto-commit-action@v4
+          with:
+            commit_message: "[action] compile contracts"
+            commit_user_name: citizenwallet-bot
+            commit_user_email: bot@citizenwallet.xyz
+            tagging_message: "v${{ steps.tagger.outputs.new-tag }}"
