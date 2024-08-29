@@ -9,8 +9,9 @@ import { toEthSignedMessageHash } from "../../utils/Helpers.sol";
 contract UserOpHandler {
 	struct ExecutionStatus {
 		bool approved;
-		bool executed;
 	}
+
+    using UserOperationLib for UserOperation;
 
 	mapping(bytes32 => ExecutionStatus) private hashes;
 
@@ -27,9 +28,9 @@ contract UserOpHandler {
 	}
 
 	function _validateReplayProtection(UserOperation calldata userOp) internal {
-		bytes32 executionHash = keccak256(userOp.callData[4:]);
+		bytes32 executionHash = userOp.hash();
 		ExecutionStatus memory status = hashes[executionHash];
-		require(!status.approved && !status.executed, "Unexpected status");
+		require(!status.approved, "UserOpHandler: USER_OPERATION_ALREADY_EXECUTED");
 		hashes[executionHash].approved = true;
 	}
 
