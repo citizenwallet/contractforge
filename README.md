@@ -76,10 +76,10 @@ $ forge script script/CommunityModule.s.sol:CommunityModuleScript --sig "deploy(
 
 # Account Factory
 ```shell
-$ forge script script/AccountFactory.s.sol:AccountFactoryScript --sig "deploy(address)" 0x061fdFcb266401cB9E9407fAbb64559751684f80 --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --private-key $PRIVATE_KEY 
+$ forge script script/AccountFactory.s.sol:AccountFactoryScript --sig "deploy(address)" 0x64B2D50ddc1a20a9b9bAF30f02983ff61B6b9963 --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --private-key $PRIVATE_KEY 
 ```
 
 # Card Manager
 ```shell
-$ forge script script/CardManagerModule.s.sol:CardManagerModuleScript --sig "deploy(address)" 0x061fdFcb266401cB9E9407fAbb64559751684f80 --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --private-key $PRIVATE_KEY 
+$ forge script script/CardManagerModule.s.sol:CardManagerModuleScript --sig "deploy(address)" 0x64B2D50ddc1a20a9b9bAF30f02983ff61B6b9963 --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --private-key $PRIVATE_KEY 
 ```
