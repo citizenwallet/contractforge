@@ -39,11 +39,6 @@ contract Paymaster is
 
     uint256 private constant SIGNATURE_OFFSET = 84;
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
-
     function initialize(address aSponsor, address[] calldata addresses) public virtual initializer {
         __Ownable_init(aSponsor);
         __Whitelist_init(addresses);
@@ -96,7 +91,12 @@ contract Paymaster is
 	}
 
 	function _updateWhiteList(address[] calldata addresses) internal virtual {
-		updateWhitelist(addresses);
+        // bump the version number so that we don't have to clear the mapping
+		_whitelistVersion++;
+
+		for (uint i = 0; i < addresses.length; i++) {
+			_whitelist[addresses[i]] = _whitelistVersion;
+		}
 	}
 
 	/**
@@ -104,12 +104,7 @@ contract Paymaster is
 	 * @param addresses The addresses to update the whitelist.
 	 */
 	function updateWhitelist(address[] calldata addresses) public onlyOwner {
-		// bump the version number so that we don't have to clear the mapping
-		_whitelistVersion++;
-
-		for (uint i = 0; i < addresses.length; i++) {
-			_whitelist[addresses[i]] = _whitelistVersion;
-		}
+		_updateWhiteList(addresses);
 	}
     ////////////////////////////////////////////////
 
