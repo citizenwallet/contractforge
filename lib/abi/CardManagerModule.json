@@ -110,6 +110,39 @@
   },
   {
     "type": "function",
+    "name": "callOnCard",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "hashedSerial",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "to",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "value",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "cardCount",
     "inputs": [],
     "outputs": [
@@ -388,6 +421,30 @@
   },
   {
     "type": "function",
+    "name": "instanceContracts",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "instanceCount",
     "inputs": [],
     "outputs": [
@@ -452,30 +509,6 @@
         "name": "",
         "type": "bool",
         "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "instanceTokens",
-    "inputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
       }
     ],
     "stateMutability": "view"
@@ -870,39 +903,6 @@
     ],
     "outputs": [],
     "stateMutability": "payable"
-  },
-  {
-    "type": "function",
-    "name": "withdraw",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "hashedSerial",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "token",
-        "type": "address",
-        "internalType": "contract IERC20"
-      },
-      {
-        "name": "to",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
   },
   {
     "type": "event",
