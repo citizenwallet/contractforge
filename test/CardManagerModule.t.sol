@@ -222,13 +222,15 @@ contract CardManagerModuleTest is Test {
 
 		bytes memory initCode = bytes("");
 
+		bytes memory data = abi.encodeWithSignature("transfer(address,uint256)", vendor, 100000000);
+
 		bytes memory transferData = abi.encodeWithSignature(
-			"withdraw(bytes32,bytes32,address,address,uint256)",
+			"callOnCard(bytes32,bytes32,address,uint256,bytes)",
 			instanceId,
 			hashedSerial,
 			address(token),
-			vendor,
-			100000000
+			0,
+			data
 		);
 
 		UserOperation memory userOp = createUserOperation(vendor, initCode, transferData);
@@ -245,13 +247,15 @@ contract CardManagerModuleTest is Test {
 
 		bytes memory initCode = bytes("");
 
+		bytes memory data = abi.encodeWithSignature("transfer(address,uint256)", vendor, 100000000);
+
 		bytes memory transferData = abi.encodeWithSignature(
-			"withdraw(bytes32,bytes32,address,address,uint256)",
+			"callOnCard(bytes32,bytes32,address,uint256,bytes)",
 			instanceId,
 			hashedSerial,
 			address(token2),
-			vendor,
-			100000000
+			0,
+			data
 		);
 
 		UserOperation memory userOp = createUserOperation(vendor, initCode, transferData);
@@ -269,13 +273,15 @@ contract CardManagerModuleTest is Test {
 
 		bytes memory initCode = bytes("");
 
+		bytes memory data = abi.encodeWithSignature("transfer(address,uint256)", vendor, 100000000);
+
 		bytes memory transferData = abi.encodeWithSignature(
-			"withdraw(bytes32,bytes32,address,address,uint256)",
+			"callOnCard(bytes32,bytes32,address,uint256,bytes)",
 			instanceId,
 			hashedSerial,
 			address(token),
-			badVendor,
-			100000000
+			0,
+			data
 		);
 
 		UserOperation memory userOp = createUserOperation(badVendor, initCode, transferData);
@@ -294,13 +300,15 @@ contract CardManagerModuleTest is Test {
 
 		bytes memory initCode = bytes("");
 
+		bytes memory data = abi.encodeWithSignature("transfer(address,uint256)", vendor, 100000000);
+
 		bytes memory transferData = abi.encodeWithSignature(
-			"withdraw(bytes32,bytes32,address,address,uint256)",
+			"callOnCard(bytes32,bytes32,address,uint256,bytes)",
 			keccak256(abi.encodePacked("4815162343")),
 			hashedSerial,
 			address(token),
-			vendor,
-			100000000
+			0,
+			data
 		);
 
 		UserOperation memory userOp = createUserOperation(vendor, initCode, transferData);
@@ -325,13 +333,15 @@ contract CardManagerModuleTest is Test {
 
 		bytes memory initCode = bytes("");
 
+		bytes memory data = abi.encodeWithSignature("transfer(address,uint256)", vendor, 100000000);
+
 		bytes memory transferData = abi.encodeWithSignature(
-			"withdraw(bytes32,bytes32,address,address,uint256)",
+			"callOnCard(bytes32,bytes32,address,uint256,bytes)",
 			instanceId,
 			hashedSerial,
 			address(token),
-			vendor,
-			100000000
+			0,
+			data
 		);
 
 		UserOperation memory userOp = createUserOperation(vendor, initCode, transferData);

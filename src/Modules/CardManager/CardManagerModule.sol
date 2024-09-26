@@ -71,7 +71,7 @@ contract CardManagerModule is
 
 	address public cardFactory;
 	mapping(bytes32 => address) public instanceOwners;
-	mapping(bytes32 => address[]) public instanceTokens;
+	mapping(bytes32 => address[]) public instanceContracts;
 	mapping(bytes32 => bool) public instancePaused;
 	uint256 public instanceCount;
 	int256 public cardCount;
@@ -128,12 +128,12 @@ contract CardManagerModule is
 		instanceCount++;
 
 		instanceOwners[id] = msg.sender;
-		instanceTokens[id] = tokens;
+		instanceContracts[id] = tokens;
 		emit InstanceCreated(id, msg.sender);
 	}
 
 	function updateInstanceTokens(bytes32 id, address[] memory tokens) external onlyInstanceOwner(id) {
-		instanceTokens[id] = tokens;
+		instanceContracts[id] = tokens;
 	}
 
 	function authorizeNewInstance(
@@ -186,20 +186,20 @@ contract CardManagerModule is
 		_;
 	}
 
-	modifier onlyInstanceToken(bytes32 id, IERC20 token) {
-		if (instanceTokens[id].length == 0) {
+	modifier onlyInstanceContract(bytes32 id, address to) {
+		if (instanceContracts[id].length == 0) {
 			revert CM15_NoTokensAuthorizedForInstance(id);
 		}
 
-		bool isTokenAuthorized = false;
-		for (uint256 i = 0; i < instanceTokens[id].length; i++) {
-			if (instanceTokens[id][i] == address(token)) {
-				isTokenAuthorized = true;
+		bool isContractAuthorized = false;
+		for (uint256 i = 0; i < instanceContracts[id].length; i++) {
+			if (instanceContracts[id][i] == to) {
+				isContractAuthorized = true;
 				break;
 			}
 		}
-		if (!isTokenAuthorized) {
-			revert CM16_TokenNotAuthorizedForInstance(id, address(token));
+		if (!isContractAuthorized) {
+			revert CM16_TokenNotAuthorizedForInstance(id, to);
 		}
 		_;
 	}
@@ -336,39 +336,32 @@ contract CardManagerModule is
 	/////////////////////////////////////////////////
 	// Execute on Card
 
-	function withdraw(
+	function callOnCard(
 		bytes32 id,
 		bytes32 hashedSerial,
-		IERC20 token,
 		address to,
-		uint256 amount
-	) public onlyCreatedInstance(id) onlyInstanceToken(id, token) onlyWhitelisted(id, to) onlyUnpausedInstance(id) {
+		uint256 value,
+		bytes memory data
+	) public onlyCreatedInstance(id) onlyInstanceContract(id, to) onlyWhitelisted(id, msg.sender) onlyUnpausedInstance(id) {
 		address cardAddress = getCardAddress(id, hashedSerial);
 
 		if (!contractExists(cardAddress)) {
 			createCard(id, hashedSerial);
 		}
 
-		_withdraw(id, hashedSerial, token, to, amount);
+		_callOnCard(id, hashedSerial, to, value, data);
 	}
 
-	function _withdraw(
+	function _callOnCard(
 		bytes32 id,
 		bytes32 hashedSerial,
-		IERC20 token,
 		address to,
-		uint256 amount
+		uint256 value,
+		bytes memory data
 	) internal onlyAuthorizedInstance(id, hashedSerial) {
 		address cardAddress = getCardAddress(id, hashedSerial);
 
-		bytes memory data = abi.encodeCall(ERC20.transfer, (to, amount));
-
-		bool success = ModuleManager(cardAddress).execTransactionFromModule(
-			address(token),
-			0,
-			data,
-			Enum.Operation.Call
-		);
+		bool success = ModuleManager(cardAddress).execTransactionFromModule(to, value, data, Enum.Operation.Call);
 		if (!success) {
 			revert CM40_FailedToWithdraw();
 		}

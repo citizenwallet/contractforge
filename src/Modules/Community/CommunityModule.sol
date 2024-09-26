@@ -122,8 +122,8 @@ contract CommunityModule is
 		(beneficiary);
 		require(ops.length > 0, "AA42 needs at least one user operation");
 
-		uint len = ops.length;
-		for (uint i = 0; i < len; ) {
+		uint256 len = ops.length;
+		for (uint256 i = 0; i < len; ) {
 			// handle each op
 			UserOperation calldata op = ops[i];
 
@@ -304,7 +304,7 @@ contract CommunityModule is
 	 * @return A boolean indicating whether a contract exists at the given address.
 	 */
 	function _contractExists(address contractAddress) internal virtual returns (bool) {
-		uint size;
+		uint256 size;
 		assembly {
 			size := extcodesize(contractAddress)
 		}
