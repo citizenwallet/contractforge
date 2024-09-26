@@ -120,7 +120,7 @@ contract CardManagerModule is
 		return instanceOwners[id];
 	}
 
-	function createInstance(bytes32 id, address[] memory tokens) external {
+	function createInstance(bytes32 id, address[] memory contracts) external {
 		if (instanceOwners[id] != address(0)) {
 			revert CM10_InstanceAlreadyExists(id);
 		}
@@ -128,12 +128,12 @@ contract CardManagerModule is
 		instanceCount++;
 
 		instanceOwners[id] = msg.sender;
-		instanceContracts[id] = tokens;
+		instanceContracts[id] = contracts;
 		emit InstanceCreated(id, msg.sender);
 	}
 
-	function updateInstanceTokens(bytes32 id, address[] memory tokens) external onlyInstanceOwner(id) {
-		instanceContracts[id] = tokens;
+	function updateInstanceContracts(bytes32 id, address[] memory contracts) external onlyInstanceOwner(id) {
+		instanceContracts[id] = contracts;
 	}
 
 	function authorizeNewInstance(
