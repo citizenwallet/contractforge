@@ -47,7 +47,7 @@ contract CommunityModuleScript is Script {
 			abi.encode(address(communityImplementation), initData)
 		);
 
-		bytes32 salt = keccak256(abi.encodePacked("SAFE_COMMUNITY_MODULE_1"));
+		bytes32 salt = keccak256(abi.encodePacked("SAFE_COMMUNITY_MODULE_23-10-2024"));
 
 		// Deploy the proxy using Create2
 		address communityProxy = create2Deployer.deploy(salt, proxyBytecode);

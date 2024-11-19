@@ -5,6 +5,8 @@ import { Script, console } from "forge-std/Script.sol";
 
 import { AccountFactory } from "../src/Modules/Community/AccountFactory.sol";
 
+import { Create2 } from "../src/Create2/Create2.sol";
+
 contract AccountFactoryScript is Script {
 	function deploy(address _communityModule) public returns (AccountFactory) {
 		uint256 deployerPrivateKey = isAnvil()
@@ -17,7 +19,30 @@ contract AccountFactoryScript is Script {
 			vm.deal(vm.addr(deployerPrivateKey), 100 ether);
 		}
 
-		AccountFactory accountFactory = new AccountFactory(_communityModule);
+		Create2 create2Deployer = Create2(vm.envAddress("CREATE2_FACTORY_ADDRESS"));
+		if (isAnvil()) {
+			// Create2 factory is not available on Anvil, make a new one
+			create2Deployer = new Create2();
+		}
+
+		// Prepare the creation code for the actual contract (not a proxy)
+		bytes memory contractBytecode = abi.encodePacked(
+			type(AccountFactory).creationCode,
+			abi.encode(_communityModule)
+		);
+
+		bytes32 salt = keccak256(abi.encodePacked("SAFE_ACCOUNT_FACTORY_23-10-2024"));
+
+		// Deploy the contract using Create2
+		address accountFactoryAddress = create2Deployer.deploy(salt, contractBytecode);
+
+		if (accountFactoryAddress == address(0)) {
+			console.log("AccountFactory deployment failed");
+			vm.stopBroadcast();
+			return AccountFactory(address(0));
+		}
+
+		AccountFactory accountFactory = AccountFactory(accountFactoryAddress);
 
 		vm.stopBroadcast();
 
