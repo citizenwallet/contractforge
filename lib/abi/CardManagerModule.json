@@ -220,7 +220,7 @@
         "internalType": "bytes32"
       },
       {
-        "name": "tokens",
+        "name": "contracts",
         "type": "address[]",
         "internalType": "address[]"
       }
@@ -852,7 +852,7 @@
   },
   {
     "type": "function",
-    "name": "updateInstanceTokens",
+    "name": "updateInstanceContracts",
     "inputs": [
       {
         "name": "id",
@@ -860,7 +860,7 @@
         "internalType": "bytes32"
       },
       {
-        "name": "tokens",
+        "name": "contracts",
         "type": "address[]",
         "internalType": "address[]"
       }
