@@ -67,24 +67,30 @@ $ anvil --help
 $ cast --help
 ```
 
+# Create2
+
+```shell
+forge create --rpc-url $GNOSIS_MAINNET_RPC_URL --private-key $PRIVATE_KEY src/Create2/Create2.sol:Create2
+```
+
 Add `--broadcast` to the end of the following the actually publish.
 
 # Community Module + Paymaster
 ```shell
-$ forge script script/CommunityModule.s.sol:CommunityModuleScript --sig "deploy(address[])" "[0x5815E61eF72c9E6107b5c5A05FD121F334f7a7f1,0x56Cc38bDa01bE6eC6D854513C995f6621Ee71229,0x37e40A8c3061Bd2cCa824E751768ed0Acd3C88fa]" --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --private-key $PRIVATE_KEY 
+$ forge script script/CommunityModule.s.sol:CommunityModuleScript --sig "deploy(address[])" "[]" --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $GNOSIS_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
 ```
 
 # Paymaster
 ```shell
-$ forge script script/Paymaster.s.sol:PaymasterDeploy --sig "deploy(address,address[])" 0x61a5c5aB3Bf53bD60aac8954e7904B0F97aA456e "[0x27F69bcDB85E6Ed437Ff3Efc114d7125B7338BFA]" --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --private-key $PRIVATE_KEY 
+$ forge script script/Paymaster.s.sol:PaymasterDeploy --sig "deploy(address,address[])" 0x61a5c5aB3Bf53bD60aac8954e7904B0F97aA456e "[0x27F69bcDB85E6Ed437Ff3Efc114d7125B7338BFA]" --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $GNOSIS_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
 ```
 
 # Account Factory
 ```shell
-$ forge script script/AccountFactory.s.sol:AccountFactoryScript --sig "deploy(address)" 0x64B2D50ddc1a20a9b9bAF30f02983ff61B6b9963 --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --private-key $PRIVATE_KEY 
+$ forge script script/AccountFactory.s.sol:AccountFactoryScript --sig "deploy(address)" 0x7079253c0358eF9Fd87E16488299Ef6e06F403B6 --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $GNOSIS_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
 ```
 
 # Card Manager
 ```shell
-$ forge script script/CardManagerModule.s.sol:CardManagerModuleScript --sig "deploy(address)" 0x64B2D50ddc1a20a9b9bAF30f02983ff61B6b9963 --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --private-key $PRIVATE_KEY 
+$ forge script script/CardManagerModule.s.sol:CardManagerModuleScript --sig "deploy(address)" 0x64B2D50ddc1a20a9b9bAF30f02983ff61B6b9963 --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $GNOSIS_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
 ```
