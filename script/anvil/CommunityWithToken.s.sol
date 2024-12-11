@@ -26,7 +26,7 @@ contract CommunityWithTokenScript is Script {
 		}
 
         UpgradeableCommunityTokenScript upgradeableCommunityTokenScript = new UpgradeableCommunityTokenScript();
-        UpgradeableCommunityToken token = upgradeableCommunityTokenScript.deploy();
+        UpgradeableCommunityToken token = upgradeableCommunityTokenScript.testDeploy();
 
         address[] memory whitelist = new address[](1);
         whitelist[0] = address(token);

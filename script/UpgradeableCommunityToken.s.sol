@@ -13,7 +13,31 @@ import { Paymaster } from "../src/Modules/Community/Paymaster.sol";
 contract UpgradeableCommunityTokenScript is Script {
 	UpgradeableCommunityToken public token;
 
-	function deploy() public returns (UpgradeableCommunityToken) {
+	function deploy(address[] calldata minters, string calldata name, string calldata symbol) public returns (UpgradeableCommunityToken) {
+		uint256 deployerPrivateKey = isAnvil()
+            ? 77_814_517_325_470_205_911_140_941_194_401_928_579_557_062_014_761_831_930_645_393_041_380_819_009_408
+            : vm.envUint("PRIVATE_KEY");
+		address deployer = vm.addr(deployerPrivateKey);
+
+		vm.startBroadcast(deployerPrivateKey);
+
+		if (isAnvil()) {
+            vm.deal(vm.addr(deployerPrivateKey), 100 ether);
+        }
+
+		address implementation = address(new UpgradeableCommunityToken());
+
+		bytes memory data = abi.encodeCall(UpgradeableCommunityToken.initialize, (deployer, minters, name, symbol));
+		address proxy = address(new ERC1967Proxy(implementation, data));
+
+		vm.stopBroadcast();
+
+		token = UpgradeableCommunityToken(proxy);
+
+		return token;
+	}
+
+	function testDeploy() public returns (UpgradeableCommunityToken) {
 		uint256 deployerPrivateKey = isAnvil()
             ? 77_814_517_325_470_205_911_140_941_194_401_928_579_557_062_014_761_831_930_645_393_041_380_819_009_408
             : vm.envUint("PRIVATE_KEY");

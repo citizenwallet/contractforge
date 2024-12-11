@@ -75,6 +75,11 @@ forge create --rpc-url $GNOSIS_MAINNET_RPC_URL --private-key $PRIVATE_KEY src/Cr
 
 Add `--broadcast` to the end of the following the actually publish.
 
+# Token
+```shell
+$ forge script script/UpgradeableCommunityToken.s.sol:UpgradeableCommunityTokenScript --sig "deploy(address[], string, string)" "[0x123]" "My Token" "MT" --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $GNOSIS_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
+```
+
 # Community Module + Paymaster
 ```shell
 $ forge script script/CommunityModule.s.sol:CommunityModuleScript --sig "deploy(address[])" "[]" --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $GNOSIS_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 

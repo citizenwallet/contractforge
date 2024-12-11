@@ -78,8 +78,8 @@ contract CardManagerModuleTest is Test {
 
 		// Deploy the community module
 		upgradeableCommunityTokenScript = new UpgradeableCommunityTokenScript();
-		token2 = upgradeableCommunityTokenScript.deploy();
-		token = upgradeableCommunityTokenScript.deploy();
+		token2 = upgradeableCommunityTokenScript.testDeploy();
+		token = upgradeableCommunityTokenScript.testDeploy();
 
 		address[] memory whitelistedAddresses = new address[](1);
 		whitelistedAddresses[0] = address(token);

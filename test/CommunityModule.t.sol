@@ -62,7 +62,7 @@ contract CommunityModuleTest is Test {
 
 		// Deploy the community module
 		upgradeableCommunityTokenScript = new UpgradeableCommunityTokenScript();
-		token = upgradeableCommunityTokenScript.deploy();
+		token = upgradeableCommunityTokenScript.testDeploy();
 
 		address[] memory whitelistedAddresses = new address[](1);
 		whitelistedAddresses[0] = address(token);
