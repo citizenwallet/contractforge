@@ -83,6 +83,7 @@ contract CardManagerModule is
 	/////////////////////////////////////////////////
 	// EVENTS
 	event InstanceCreated(bytes32 id, address owner);
+	event InstanceContractsUpdated(bytes32 id, address[] contracts);
 	event WhitelistUpdated(bytes32 id, address[] addresses);
 
 	event CardCreated(address indexed card);
@@ -134,6 +135,8 @@ contract CardManagerModule is
 
 	function updateInstanceContracts(bytes32 id, address[] memory contracts) external onlyInstanceOwner(id) {
 		instanceContracts[id] = contracts;
+
+		emit InstanceContractsUpdated(id, contracts);
 	}
 
 	function authorizeNewInstance(
