@@ -28,18 +28,6 @@ error FailedToAddSigner();
 error FailedToRemoveSigner();
 error SignerNotOwner();
 
-error CM10_InstanceAlreadyExists(bytes32 id);
-error CM11_OnlyInstanceOwner(address instanceOwner);
-error CM12_InstanceDoesNotExist(bytes32 id);
-error CM13_InstanceIsPaused(bytes32 id);
-error CM14_InstanceNotAuthorized(bytes32 id);
-error CM15_NoTokensAuthorizedForInstance(bytes32 id);
-error CM16_TokenNotAuthorizedForInstance(bytes32 id, address token);
-error CM20_AddressNotWhitelisted(bytes32 id, address addr);
-error CM33_AccountNotCreated();
-error CM34_FailedToAddOwner();
-error CM40_FailedToWithdraw();
-
 contract SessionManagerModule is
 	CompatibilityFallbackHandler,
 	BaseGuard,
