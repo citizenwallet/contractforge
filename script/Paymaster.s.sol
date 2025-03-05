@@ -31,7 +31,7 @@ contract PaymasterDeploy is Script {
 			abi.encode(address(implementation), initData)
 		);
 
-		bytes32 salt = keccak256(abi.encodePacked("PAYMASTER_KFMEDIA"));
+		bytes32 salt = keccak256(abi.encodePacked("PAYMASTER_GRATITUDE"));
 
 		// Deploy the proxy using Create2
 		address proxyAddress = Create2(vm.envAddress("CREATE2_FACTORY_ADDRESS")).deploy(salt, proxyBytecode);

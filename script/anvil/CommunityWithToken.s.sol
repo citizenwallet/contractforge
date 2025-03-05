@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import { Script, console } from "forge-std/Script.sol";
 
 import { UpgradeableCommunityTokenScript } from "../UpgradeableCommunityToken.s.sol";
-import { CommunityModuleScript } from "../CommunityModule.s.sol";
+import { CommunityAndPaymasterModuleScript } from "../CommunityAndPaymaster.s.sol";
 import { AccountFactoryScript } from "../AccountFactory.s.sol";
 
 import { AccountFactory } from "../../src/Modules/Community/AccountFactory.sol";
@@ -31,9 +31,9 @@ contract CommunityWithTokenScript is Script {
         address[] memory whitelist = new address[](1);
         whitelist[0] = address(token);
 
-        CommunityModuleScript communityModuleScript = new CommunityModuleScript();
+        CommunityAndPaymasterModuleScript communityAndPaymasterModuleScript = new CommunityAndPaymasterModuleScript();
 
-        (CommunityModule communityModule, Paymaster paymaster) = communityModuleScript.deploy(whitelist);
+        (CommunityModule communityModule, Paymaster paymaster) = communityAndPaymasterModuleScript.deploy(whitelist);
 
 		AccountFactoryScript accountFactoryScript = new AccountFactoryScript();
 		AccountFactory accountFactory = accountFactoryScript.deploy(address(communityModule));

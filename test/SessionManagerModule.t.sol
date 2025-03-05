@@ -16,7 +16,7 @@ import { SafeSuiteSetupScript } from "../script/SafeSuiteSetup.s.sol";
 import { AccountFactoryScript } from "../script/AccountFactory.s.sol";
 import { SessionManagerModuleScript } from "../script/SessionManagerModule.s.sol";
 import { DeploymentScript } from "../script/Deployment.s.sol";
-import { CommunityModuleScript } from "../script/CommunityModule.s.sol";
+import { CommunityAndPaymasterModuleScript } from "../script/CommunityAndPaymaster.s.sol";
 import { UpgradeableCommunityTokenScript } from "../script/UpgradeableCommunityToken.s.sol";
 
 import { CommunityModule } from "../src/Modules/Community/CommunityModule.sol";
@@ -94,8 +94,8 @@ contract SessionManagerModuleTest is Test {
 		address[] memory whitelistedAddresses = new address[](1);
 		whitelistedAddresses[0] = address(token);
 
-		CommunityModuleScript communityModuleScript = new CommunityModuleScript();
-		(communityModule, paymaster) = communityModuleScript.deploy(whitelistedAddresses);
+		CommunityAndPaymasterModuleScript communityAndPaymasterModuleScript = new CommunityAndPaymasterModuleScript();
+		(communityModule, paymaster) = communityAndPaymasterModuleScript.deploy(whitelistedAddresses);
 
 		// Deploy the account factory
 		AccountFactoryScript accountFactoryScript = new AccountFactoryScript();
