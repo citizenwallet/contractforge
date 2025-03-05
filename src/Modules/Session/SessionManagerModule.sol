@@ -18,7 +18,9 @@ import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/
 import { TwoFAFactory } from "./TwoFAFactory.sol";
 import { SessionRequest, ActiveSession } from "./SessionRequest.sol";
 
-error ChallengeExpired();
+import { toEthSignedMessageHash } from "../../utils/Helpers.sol";
+
+error SessionRequestExpired();
 error SessionOwnerIsProvider();
 error InvalidProvider();
 error SessionRequestNotFound();
@@ -27,7 +29,6 @@ error AccountNotCreated();
 error FailedToAddSigner();
 error FailedToRemoveSigner();
 error SignerNotOwner();
-
 contract SessionManagerModule is
 	CompatibilityFallbackHandler,
 	BaseGuard,
@@ -73,7 +74,7 @@ contract SessionManagerModule is
 	// VARIABLES
 	address public twoFAFactory;
 	mapping(address => mapping(bytes32 => SessionRequest)) public sessionRequests;
-	mapping(address => ActiveSession) public activeSessions;
+	ActiveSession[] public activeSessions;
 
 	/////////////////////////////////////////////////
 	// EVENTS
@@ -114,7 +115,7 @@ contract SessionManagerModule is
 	) external {
 		// make sure challengeExpiry is in the future
 		if (sessionRequestExpiry > 0 && sessionRequestExpiry < block.timestamp) {
-			revert ChallengeExpired();
+			revert SessionRequestExpired();
 		}
 
 		// provider is sender
@@ -124,8 +125,8 @@ contract SessionManagerModule is
 		uint256 salt = _bytes32ToUint256(sessionSalt);
 		address account = TwoFAFactory(twoFAFactory).createAccount(provider, salt);
 
-		// recover sessionOwner
-		address sessionOwner = recoverSigner(sessionRequestHash, signedSessionRequestHash);
+		// recover session owner
+		address sessionOwner = _recoverEthSignedSigner(sessionRequestHash, signedSessionRequestHash);
 
 		// session owner should not be provider
 		if (sessionOwner == provider) {
@@ -152,20 +153,20 @@ contract SessionManagerModule is
 
 		// check if session request has expired
 		if (sessionRequest.expiry > 0 && sessionRequest.expiry < block.timestamp) {
-			revert ChallengeExpired();
+			revert SessionRequestExpired();
 		}
 
 		// provider is sender
 		address provider = msg.sender;
 
 		// check if provider is valid
-		address recoveredProvider = recoverSigner(sessionRequestHash, sessionRequest.signedSessionHash);
+		address recoveredProvider = _recoverEthSignedSigner(sessionHash, sessionRequest.signedSessionHash);
 		if (recoveredProvider != provider) {
 			revert InvalidProvider();
 		}
 
 		// check if owner signed session hash is valid
-		if (recoverSigner(sessionHash, ownerSignedSessionHash) != sessionRequest.owner) {
+		if (_recoverEthSignedSigner(sessionHash, ownerSignedSessionHash) != sessionRequest.owner) {
 			revert InvalidOwnerSignedSessionHash();
 		}
 
@@ -173,11 +174,13 @@ contract SessionManagerModule is
 		_addSigner(sessionRequest.account, sessionRequest.owner);
 
 		// set expiry
-		activeSessions[sessionRequest.owner] = ActiveSession({
-			owner: sessionRequest.owner,
-			account: sessionRequest.account,
-			expiry: sessionRequest.expiry
-		});
+		activeSessions.push(
+			ActiveSession({
+				owner: sessionRequest.owner,
+				account: sessionRequest.account,
+				expiry: sessionRequest.expiry
+			})
+		);
 
 		// delete session request
 		delete sessionRequests[provider][sessionRequestHash];
@@ -226,7 +229,7 @@ contract SessionManagerModule is
 
 		// Need to find the previous owner in the linked list
 		address[] memory owners = ownerManager.getOwners();
-		address prevOwner = address(0);
+		address prevOwner = address(0x1);
 		address currentOwner = signer;
 
 		// Traverse the linked list to find the previous owner
@@ -251,11 +254,17 @@ contract SessionManagerModule is
 	/////////////////////////////////////////////////
 	// Session Management
 
-	function removeExpiredSessions(address signer) public {
-		if (activeSessions[signer].expiry > 0 && activeSessions[signer].expiry < block.timestamp) {
-			_removeSigner(activeSessions[signer].account, signer);
+	function removeExpiredSessions() public {
+		if (activeSessions.length == 0) {
+			return;
+		}
 
-			delete activeSessions[signer];
+		for (uint256 i = 0; i < activeSessions.length; i++) {
+			if (activeSessions[i].expiry < block.timestamp) {
+				_removeSigner(activeSessions[i].account, activeSessions[i].owner);
+
+				delete activeSessions[i];
+			}
 		}
 	}
 
@@ -268,7 +277,7 @@ contract SessionManagerModule is
 		address /*to*/,
 		uint256 /*value*/,
 		bytes memory /*data*/,
-		Enum.Operation operation,
+		Enum.Operation /*operation*/,
 		uint256 /*safeTxGas*/,
 		uint256 /*baseGas*/,
 		uint256 /*gasPrice*/,
@@ -276,11 +285,11 @@ contract SessionManagerModule is
 		address payable /*refundReceiver*/,
 		bytes memory /*signatures*/,
 		address /*msgSender*/
-	) external {
-		removeExpiredSessions(msg.sender);
+	) external override {
+		removeExpiredSessions();
 	}
 
-	function checkAfterExecution(bytes32 txHash, bool success) external {}
+	function checkAfterExecution(bytes32 txHash, bool success) external override {}
 
 	function supportsInterface(
 		bytes4 interfaceId
@@ -309,6 +318,10 @@ contract SessionManagerModule is
 		assembly {
 			result := mload(add(data, add(32, index)))
 		}
+	}
+
+	function _recoverEthSignedSigner(bytes32 _hash, bytes memory _signature) internal pure returns (address signer) {
+		return recoverSigner(toEthSignedMessageHash(_hash), _signature);
 	}
 
 	/**

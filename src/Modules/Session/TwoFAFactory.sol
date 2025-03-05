@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import { Safe, ModuleManager } from "safe-smart-account/contracts/Safe.sol";
+import { Safe, ModuleManager, GuardManager } from "safe-smart-account/contracts/Safe.sol";
 import { SafeProxyFactory } from "safe-smart-account/contracts/proxies/SafeProxyFactory.sol";
 import { SafeProxy } from "safe-smart-account/contracts/proxies/SafeProxy.sol";
 
 import { SafeSuiteLib } from "../../utils/SafeSuiteLib.sol";
 
 contract TwoFAFactory is SafeProxyFactory {
-	address immutable public COMMUNITY_MODULE;
-	address immutable public SESSION_MANAGER_MODULE;
+	address public immutable COMMUNITY_MODULE;
+	address public immutable SESSION_MANAGER_MODULE;
 
 	string public constant NAME = "2FA Factory";
 	string public constant VERSION = "0.0.1";
@@ -97,7 +97,8 @@ contract TwoFAFactory is SafeProxyFactory {
 	 * @return bytes memory The initializer data for the Safe proxy
 	 */
 	function _getInitializer(address _safe) internal view returns (bytes memory) {
-		address[] memory owners = new address[](0);
+		address[] memory owners = new address[](1);
+		owners[0] = address(this); // impossible to set up with no owners
 
 		address[] memory modules = new address[](2);
 		modules[0] = COMMUNITY_MODULE;
@@ -105,7 +106,7 @@ contract TwoFAFactory is SafeProxyFactory {
 
 		// Prepare the data to call enableModule on the CommunityModule
 		// Encode the enableModule function call
-		bytes memory enableModuleData = abi.encodeCall(this.enableModules, (_safe, modules));
+		bytes memory configureSafeData = abi.encodeCall(this.configureSafe, (_safe, modules, SESSION_MANAGER_MODULE));
 
 		// Prepare safe initializer data
 		bytes memory safeInitializer = abi.encodeWithSelector(
@@ -113,7 +114,7 @@ contract TwoFAFactory is SafeProxyFactory {
 			owners,
 			1, // threshold
 			address(this), // to
-			enableModuleData, // data
+			configureSafeData, // data
 			// address(0), // to
 			// "", // data
 			SafeSuiteLib.SAFE_TokenCallbackHandler_ADDRESS, // fallbackHandler
@@ -130,7 +131,7 @@ contract TwoFAFactory is SafeProxyFactory {
 	 * @param _safe The address of the Safe proxy
 	 * @param _safeModules The address of the modules to enable
 	 */
-	function enableModules(address _safe, address[] memory _safeModules) public payable {
+	function configureSafe(address _safe, address[] memory _safeModules, address _guard) public payable {
 		Safe safe = Safe(payable(_safe));
 
 		for (uint256 i = 0; i < _safeModules.length; i++) {
@@ -143,5 +144,7 @@ contract TwoFAFactory is SafeProxyFactory {
 
 			ModuleManager(payable(safe)).enableModule(module);
 		}
+
+		GuardManager(payable(safe)).setGuard(_guard);
 	}
 }
