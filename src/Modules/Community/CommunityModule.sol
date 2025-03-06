@@ -38,7 +38,7 @@ contract CommunityModule is
 	UUPSUpgradeable
 {
 	string public constant NAME = "Community Module";
-	string public constant VERSION = "0.0.1";
+	string public constant VERSION = "0.0.2";
 
 	////////////////
 
