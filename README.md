@@ -85,6 +85,11 @@ $ forge script script/UpgradeableCommunityToken.s.sol:UpgradeableCommunityTokenS
 $ forge script script/CommunityModule.s.sol:CommunityModuleScript --sig "deploy()" --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $GNOSIS_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
 ```
 
+# Community Module Upgrade (v2)
+```shell
+$ forge script script/upgrade/UpgradeCommunityModule.s.sol:UpgradeCommunityModuleScript --sig "run(address)" "0x7079253c0358eF9Fd87E16488299Ef6e06F403B6" --rpc-url $POLYGON_ZK_MAINNET_RPC_URL --etherscan-api-key $POLYGON_ZK_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $POLYGON_ZK_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
+```
+
 # Community + Paymaster Module
 ```shell
 $ forge script script/CommunityAndPaymaster.s.sol:CommunityAndPaymasterModuleScript --sig "deploy(address[])" "[]" --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $GNOSIS_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
@@ -103,4 +108,9 @@ $ forge script script/AccountFactory.s.sol:AccountFactoryScript --sig "deploy(ad
 # Card Manager
 ```shell
 $ forge script script/CardManagerModule.s.sol:CardManagerModuleScript --sig "deploy(address)" 0x7079253c0358eF9Fd87E16488299Ef6e06F403B6 --rpc-url $ARBITRUM_MAINNET_RPC_URL --etherscan-api-key $ARBITRUM_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $ARBITRUM_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
+```
+
+# Session Manager
+```shell
+$ forge script script/SessionManagerModule.s.sol:SessionManagerModuleScript --sig "deploy(address)" 0x7079253c0358eF9Fd87E16488299Ef6e06F403B6 --rpc-url $POLYGON_MAINNET_RPC_URL --etherscan-api-key $POLYGON_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $POLYGON_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
 ```
