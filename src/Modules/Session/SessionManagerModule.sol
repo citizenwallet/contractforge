@@ -29,6 +29,7 @@ error AccountNotCreated();
 error FailedToAddSigner();
 error FailedToRemoveSigner();
 error SignerNotOwner();
+error SignerAlreadyExists();
 contract SessionManagerModule is
 	CompatibilityFallbackHandler,
 	BaseGuard,
@@ -106,6 +107,18 @@ contract SessionManagerModule is
 	/////////////////////////////////////////////////
 	// SESSION MANAGEMENT
 
+	/**
+	 * @notice Initiates a session request between a provider and a session owner
+	 * @dev Creates or retrieves an account and stores the session request for later confirmation
+	 * @param sessionSalt A unique salt used to deterministically generate the account address
+	 * @param sessionRequestHash Hash of the session request data
+	 * @param signedSessionRequestHash Signature of the session request hash by the session owner
+	 * @param signedSessionHash Signature of the session hash by the provider
+	 * @param sessionRequestExpiry Timestamp when the session request expires (0 for no expiry)
+	 * @custom:throws SessionRequestExpired if the expiry timestamp is in the past
+	 * @custom:throws SessionOwnerIsProvider if the recovered session owner is the same as the provider
+	 * @custom:emits Requested event with provider address and session request hash
+	 */
 	function request(
 		bytes32 sessionSalt,
 		bytes32 sessionRequestHash,
@@ -137,6 +150,7 @@ contract SessionManagerModule is
 		sessionRequests[provider][sessionRequestHash] = SessionRequest({
 			expiry: sessionRequestExpiry,
 			signedSessionHash: signedSessionHash,
+			provider: provider,
 			owner: sessionOwner,
 			account: account
 		});
@@ -144,6 +158,18 @@ contract SessionManagerModule is
 		emit Requested(provider, sessionRequestHash);
 	}
 
+	/**
+	 * @notice Confirms a session request and adds the session owner as a signer to the account
+	 * @dev Verifies signatures from both provider and owner before adding the owner as a signer
+	 * @param sessionRequestHash Hash of the session request to confirm
+	 * @param sessionHash Hash of the session data
+	 * @param ownerSignedSessionHash Signature of the session hash by the session owner
+	 * @custom:throws SessionRequestNotFound if the session request doesn't exist
+	 * @custom:throws SessionRequestExpired if the session request has expired
+	 * @custom:throws InvalidProvider if the recovered provider doesn't match the sender
+	 * @custom:throws InvalidOwnerSignedSessionHash if the owner signature is invalid
+	 * @custom:emits Confirmed event with provider, account, and session owner addresses
+	 */
 	function confirm(bytes32 sessionRequestHash, bytes32 sessionHash, bytes calldata ownerSignedSessionHash) external {
 		// check if session request exists
 		SessionRequest memory sessionRequest = sessionRequests[msg.sender][sessionRequestHash];
@@ -160,6 +186,10 @@ contract SessionManagerModule is
 		address provider = msg.sender;
 
 		// check if provider is valid
+		if (sessionRequest.provider != provider) {
+			revert InvalidProvider();
+		}
+
 		address recoveredProvider = _recoverEthSignedSigner(sessionHash, sessionRequest.signedSessionHash);
 		if (recoveredProvider != provider) {
 			revert InvalidProvider();
@@ -188,6 +218,12 @@ contract SessionManagerModule is
 		emit Confirmed(provider, sessionRequest.account, sessionRequest.owner);
 	}
 
+	/**
+	 * @notice Calculates the deterministic account address for a given session salt
+	 * @dev Uses the TwoFAFactory to compute the address without deploying the contract
+	 * @param sessionSalt A unique salt used to deterministically generate the account address
+	 * @return The address where the account contract would be deployed with the given salt
+	 */
 	function _getAccountAddress(bytes32 sessionSalt) internal view returns (address) {
 		uint256 salt = _bytes32ToUint256(sessionSalt);
 
@@ -196,6 +232,12 @@ contract SessionManagerModule is
 		return accountAddress;
 	}
 
+	/**
+	 * @notice Converts a bytes32 value to a uint256
+	 * @dev Simple type conversion used for salt calculations
+	 * @param b The bytes32 value to convert
+	 * @return The equivalent uint256 value
+	 */
 	function _bytes32ToUint256(bytes32 b) internal pure returns (uint256) {
 		return uint256(b);
 	}
@@ -203,6 +245,15 @@ contract SessionManagerModule is
 	/////////////////////////////////////////////////
 	// ACCOUNT OWNERSHIP
 
+	/**
+	 * @notice Internal function to add a new signer to an account
+	 * @dev Uses the Safe's ModuleManager to execute the addOwnerWithThreshold function
+	 *      while maintaining the same threshold
+	 * @param account The address of the account to modify
+	 * @param newSigner The address to add as a new signer
+	 * @custom:throws AccountNotCreated if the account is not a valid contract
+	 * @custom:throws FailedToAddSigner if the transaction to add the signer fails
+	 */
 	function _addSigner(address account, address newSigner) internal {
 		if (!contractExists(account)) {
 			revert AccountNotCreated();
@@ -218,6 +269,16 @@ contract SessionManagerModule is
 		}
 	}
 
+	/**
+	 * @notice Internal function to remove a signer from an account
+	 * @dev Uses the Safe's ModuleManager to execute the removeOwner function
+	 *      Safe uses a linked list structure for owners, so we need to find the previous owner
+	 *      in the list before removing the target signer
+	 * @param account The address of the account to modify
+	 * @param signer The address to remove as a signer
+	 * @custom:throws SignerNotOwner if the signer is not an owner of the account
+	 * @custom:throws FailedToRemoveSigner if the transaction to remove the signer fails
+	 */
 	function _removeSigner(address account, address signer) internal {
 		OwnerManager ownerManager = OwnerManager(account);
 
@@ -251,9 +312,54 @@ contract SessionManagerModule is
 		}
 	}
 
+	/**
+	 * @notice Adds a new signer to the calling account
+	 * @dev Can only be called by an existing account contract
+	 * @param signer The address to add as a new signer to the account
+	 * @custom:throws AccountNotCreated if the caller is not a valid contract
+	 * @custom:throws SignerAlreadyExists if the signer is already an owner of the account
+	 */
+	function addSigner(address signer) public {
+		if (!contractExists(msg.sender)) {
+			revert AccountNotCreated();
+		}
+
+		if (OwnerManager(msg.sender).isOwner(signer)) {
+			revert SignerAlreadyExists();
+		}
+
+		_addSigner(msg.sender, signer);
+	}
+
+	/**
+	 * @notice Removes a signer from the calling account
+	 * @dev Can only be called by an existing account contract
+	 * @param signer The address to remove as a signer from the account
+	 * @custom:throws AccountNotCreated if the caller is not a valid contract
+	 * @custom:throws SignerNotOwner if the signer is not an owner of the account
+	 */
+	function revoke(address signer) public {
+		if (!contractExists(msg.sender)) {
+			revert AccountNotCreated();
+		}
+
+		if (!OwnerManager(msg.sender).isOwner(signer)) {
+			revert SignerNotOwner();
+		}
+
+		_removeSigner(msg.sender, signer);
+	}
+
 	/////////////////////////////////////////////////
 	// Session Management
 
+	/**
+	 * @notice Removes all expired sessions from active sessions
+	 * @dev Iterates through all active sessions, removes signers from accounts where sessions have expired,
+	 *      and deletes the expired session entries from the activeSessions array
+	 * @custom:security This function is called automatically by the Guard's checkTransaction function
+	 *                  before any transaction execution to ensure expired sessions are properly cleaned up
+	 */
 	function removeExpiredSessions() public {
 		if (activeSessions.length == 0) {
 			return;
@@ -273,6 +379,11 @@ contract SessionManagerModule is
 	/////////////////////////////////////////////////
 	// Guard
 
+	/**
+	 * @notice Hook that is called before any transaction execution
+	 * @dev Implements the Guard interface to automatically clean up expired sessions
+	 *      before any transaction is executed
+	 */
 	function checkTransaction(
 		address /*to*/,
 		uint256 /*value*/,
@@ -289,8 +400,18 @@ contract SessionManagerModule is
 		removeExpiredSessions();
 	}
 
-	function checkAfterExecution(bytes32 txHash, bool success) external override {}
+	/**
+	 * @notice Hook that is called after a transaction has been executed
+	 * @dev Required by the Guard interface but not used in this implementation
+	 */
+	function checkAfterExecution(bytes32 /*txHash*/, bool /*success*/) external override {}
 
+	/**
+	 * @notice Determines if the contract implements a specific interface
+	 * @dev Overrides both BaseGuard and TokenCallbackHandler implementations
+	 * @param interfaceId The interface identifier to check
+	 * @return True if the contract implements the interface, false otherwise
+	 */
 	function supportsInterface(
 		bytes4 interfaceId
 	) external view virtual override(BaseGuard, TokenCallbackHandler) returns (bool) {
@@ -304,6 +425,12 @@ contract SessionManagerModule is
 	/////////////////////////////////////////////////
 	// HELPERS
 
+	/**
+	 * @notice Checks if a contract exists at the given address
+	 * @dev Uses assembly to check the code size at the address
+	 * @param contractAddress The address to check for contract code
+	 * @return True if contract code exists at the address, false otherwise
+	 */
 	function contractExists(address contractAddress) public view returns (bool) {
 		uint256 size;
 		// solhint-disable-next-line no-inline-assembly
@@ -313,6 +440,13 @@ contract SessionManagerModule is
 		return size > 0;
 	}
 
+	/**
+	 * @notice Extracts a bytes32 value from a bytes array at the specified index
+	 * @dev Uses assembly for efficient memory access
+	 * @param data The bytes array to read from
+	 * @param index The starting position in the bytes array
+	 * @return result The bytes32 value at the specified index
+	 */
 	function readBytes32(bytes memory data, uint256 index) internal pure returns (bytes32 result) {
 		require(data.length >= index + 32, "readBytes32: invalid data length");
 		assembly {
@@ -320,6 +454,13 @@ contract SessionManagerModule is
 		}
 	}
 
+	/**
+	 * @notice Recovers the signer of an Ethereum signed message hash
+	 * @dev Converts the hash to an Ethereum signed message hash before recovery
+	 * @param _hash The original hash that was signed
+	 * @param _signature The signature bytes
+	 * @return signer The address that signed the message
+	 */
 	function _recoverEthSignedSigner(bytes32 _hash, bytes memory _signature) internal pure returns (address signer) {
 		return recoverSigner(toEthSignedMessageHash(_hash), _signature);
 	}
@@ -327,8 +468,9 @@ contract SessionManagerModule is
 	/**
 	 * @notice Recover the signer of hash, assuming it's an EOA account
 	 * @dev Only for EthSign signatures
-	 * @param _hash       Hash of message that was signed
-	 * @param _signature  Signature encoded as (bytes32 r, bytes32 s, uint8 v)
+	 * @param _hash Hash of message that was signed
+	 * @param _signature Signature encoded as (bytes32 r, bytes32 s, uint8 v)
+	 * @return signer The address that signed the message
 	 */
 	function recoverSigner(bytes32 _hash, bytes memory _signature) internal pure returns (address signer) {
 		require(_signature.length == 65, "SignatureValidator#recoverSigner: invalid signature length");

@@ -36,7 +36,7 @@ contract SessionManagerModuleTest is Test {
 
 	Utils public utils = new Utils();
 	// keccak256("guard_manager.guard.address")
-    bytes32 internal constant GUARD_STORAGE_SLOT = 0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8;
+	bytes32 internal constant GUARD_STORAGE_SLOT = 0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8;
 
 	CommunityModule public communityModule;
 	Paymaster public paymaster;
@@ -227,8 +227,6 @@ contract SessionManagerModuleTest is Test {
 
 		UserOperation memory userOp = createUserOperation(account1, initCode, address(token), transferData);
 
-		console.log("******SESSION MANAGER MODULE******", address(sessionManagerModule));
-
 		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, sessionPrivateKey);
 		executeUserOp(userOp);
 
@@ -277,9 +275,80 @@ contract SessionManagerModuleTest is Test {
 		assertEq(token.balanceOf(account2), 0, "Balance should be 0");
 	}
 
-	function _addSession(uint256 sessionPrivateKey, uint256 providerPrivateKey, bytes32 sessionSalt, uint48 expiry) private {
+	function testAddingSessionAsSigner() public {
+		uint256 sessionPrivateKey = 0x1234567890123456789012345678901234567890123456789012345678901236;
 		address sessionOwner = vm.addr(sessionPrivateKey);
-		
+
+		OwnerManager ownerManager = OwnerManager(account1);
+		assertEq(ownerManager.isOwner(sessionOwner), false, "Session owner should not be an owner");
+
+		uint48 expiry = uint48(block.timestamp + 300);
+
+		_addSession(sessionPrivateKey, ownerPrivateKey, sessionSalt1, expiry);
+
+		assertEq(ownerManager.isOwner(sessionOwner), true, "Session owner should be an owner");
+
+		uint256 session1PrivateKey = 0x1234567890123456789012345678901234567890123456789012345678901237;
+		address session1Owner = vm.addr(session1PrivateKey);
+
+		assertEq(ownerManager.isOwner(session1Owner), false, "Session1 owner should not be an owner");
+
+		bytes memory initCode = bytes("");
+
+		bytes memory data = abi.encodeWithSignature("addSigner(address)", session1Owner);
+
+		UserOperation memory userOp = createUserOperation(account1, initCode, address(sessionManagerModule), data);
+
+		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, sessionPrivateKey);
+		executeUserOp(userOp);
+
+		assertEq(ownerManager.isOwner(session1Owner), true, "Session1 owner should be an owner");
+
+		bytes memory initCode1 = bytes("");
+
+		bytes memory data1 = abi.encodeWithSignature("revoke(address)", session1Owner);
+
+		UserOperation memory userOp1 = createUserOperation(account1, initCode1, address(sessionManagerModule), data1);
+
+		(userOp1.paymasterAndData, userOp1.signature) = signUserOp(userOp1, sessionPrivateKey);
+		executeUserOp(userOp1);
+
+		assertEq(ownerManager.isOwner(session1Owner), false, "Session1 owner should not be an owner");
+	}
+
+	function testRevokingMySession() public {
+		uint256 sessionPrivateKey = 0x1234567890123456789012345678901234567890123456789012345678901236;
+		address sessionOwner = vm.addr(sessionPrivateKey);
+
+		OwnerManager ownerManager = OwnerManager(account1);
+		assertEq(ownerManager.isOwner(sessionOwner), false, "Session owner should not be an owner");
+
+		uint48 expiry = uint48(block.timestamp + 300);
+
+		_addSession(sessionPrivateKey, ownerPrivateKey, sessionSalt1, expiry);
+
+		assertEq(ownerManager.isOwner(sessionOwner), true, "Session owner should be an owner");
+
+		bytes memory initCode = bytes("");
+
+		bytes memory data = abi.encodeWithSignature("revoke(address)", sessionOwner);
+
+		UserOperation memory userOp = createUserOperation(account1, initCode, address(sessionManagerModule), data);
+
+		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, sessionPrivateKey);
+		executeUserOp(userOp);
+
+		assertEq(ownerManager.isOwner(sessionOwner), false, "Session owner should not be an owner");
+	}
+
+	function _addSession(
+		uint256 sessionPrivateKey,
+		uint256 providerPrivateKey,
+		bytes32 sessionSalt,
+		uint48 expiry
+	) private {
+		address sessionOwner = vm.addr(sessionPrivateKey);
+
 		console.log("SESSION OWNER", sessionOwner);
 
 		// Create session request hash and signature
