@@ -126,6 +126,7 @@ contract SessionManagerModule is
 		bytes calldata signedSessionHash,
 		uint48 sessionRequestExpiry
 	) external {
+		// TODO: add a uint48 challengeExpiry as well to expire the session request after a certain time, ok for now
 		// make sure challengeExpiry is in the future
 		if (sessionRequestExpiry > 0 && sessionRequestExpiry < block.timestamp) {
 			revert SessionRequestExpired();
