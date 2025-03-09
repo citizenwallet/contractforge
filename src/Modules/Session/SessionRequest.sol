@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 struct SessionRequest {
 	uint48 expiry;
 	bytes signedSessionHash;
+	address provider;
 	address owner;
     address account;
 }
