@@ -5,6 +5,7 @@ import { Script, console } from "forge-std/Script.sol";
 
 import { TwoFAFactory } from "../src/Modules/Session/TwoFAFactory.sol";
 import { SessionManagerModule } from "../src/Modules/Session/SessionManagerModule.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract SessionManagerModuleScript is Script {
 	function deploy(address communityModule) public returns (SessionManagerModule, TwoFAFactory) {
@@ -20,13 +21,27 @@ contract SessionManagerModuleScript is Script {
 		}
 
 		// Chicken and egg deployment
-		SessionManagerModule sessionManagerModule = new SessionManagerModule();
 
-		// the card factory needs the card manager module address to deploy
+		// Calculate the future address of TwoFAFactory before deployment
+		uint256 deployerNonce = vm.getNonce(deployer);
+		// Add 2 to the nonce: +1 for sessionManagerModuleImpl, +1 for sessionManagerProxy
+		address predictedTwoFAFactoryAddress = computeDeployedAddress(deployer, deployerNonce + 2);
+		console.log("Predicted TwoFAFactory address: ", predictedTwoFAFactoryAddress);
+		
+		// Deploy the implementation contract
+		SessionManagerModule sessionManagerModuleImpl = new SessionManagerModule();
+		
+		// Deploy the proxy pointing to the implementation
+		ERC1967Proxy sessionManagerProxy = new ERC1967Proxy(
+			address(sessionManagerModuleImpl),
+			abi.encodeCall(SessionManagerModule.initialize, (deployer, predictedTwoFAFactoryAddress)) // Use predicted address
+		);
+		
+		// Cast the proxy to the SessionManagerModule interface
+		SessionManagerModule sessionManagerModule = SessionManagerModule(address(sessionManagerProxy));
+		
+		// Deploy the TwoFAFactory with the proxy address
 		TwoFAFactory twoFAFactory = new TwoFAFactory(communityModule, address(sessionManagerModule));
-
-		// the card manager module needs the card factory address in order to function
-		sessionManagerModule.initialize(deployer, address(twoFAFactory));
 
 		vm.stopBroadcast();
 
@@ -38,5 +53,12 @@ contract SessionManagerModuleScript is Script {
 
 	function isAnvil() private view returns (bool) {
 		return block.chainid == 31_337;
+	}
+	
+	// Helper function to compute the address for a regular CREATE deployment
+	function computeDeployedAddress(address deployer, uint256 nonce) public pure returns (address) {
+		return address(uint160(uint256(keccak256(abi.encodePacked(
+			bytes1(0xd6), bytes1(0x94), deployer, bytes1(uint8(nonce))
+		)))));
 	}
 }
