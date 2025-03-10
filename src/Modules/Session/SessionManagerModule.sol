@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
@@ -191,8 +192,7 @@ contract SessionManagerModule is
 			revert InvalidProvider();
 		}
 
-		address recoveredProvider = _recoverEthSignedSigner(sessionHash, sessionRequest.signedSessionHash);
-		if (recoveredProvider != provider) {
+		if (!_isOwnerSignature(provider, sessionHash, sessionRequest.signedSessionHash)) {
 			revert InvalidProvider();
 		}
 
@@ -453,6 +453,50 @@ contract SessionManagerModule is
 		assembly {
 			result := mload(add(data, add(32, index)))
 		}
+	}
+
+	/**
+	 * @notice Determines if a signature is valid for an account, either directly or through ERC1271 validation
+	 * @dev Checks multiple validation paths: direct signer match, ERC1271 contract validation, or ownership via OwnerManager
+	 * @param account The account address to check ownership against
+	 * @param _hash The message hash that was signed
+	 * @param _signature The signature bytes to validate
+	 * @return True if the signature is valid for the account, false otherwise
+	 */
+	function _isOwnerSignature(address account, bytes32 _hash, bytes memory _signature) internal view returns (bool) {
+		// First, recover the signer address from the signature
+		address signer = _recoverEthSignedSigner(_hash, _signature);
+		
+		// If recovery failed (returned address zero), the signature is invalid
+		if (signer == address(0)) {
+			return false;
+		}
+
+		// If the signer is the account itself, it's automatically valid
+		if (signer == account) {
+			return true;
+		}
+
+		// If the account is not a contract, we can't perform further checks
+		if (!contractExists(account)) {
+			return false;
+		}
+
+		// Try ERC1271 signature validation if the account is a contract
+		// This allows smart contracts to implement their own signature validation logic
+		try IERC1271(account).isValidSignature(_hash, _signature) returns (bytes4 magicValue) {
+			// The magic value 0x1626ba7e is the ERC1271 standard return value for valid signatures
+			if (magicValue == 0x1626ba7e) {
+				return true; // Signature is valid according to the contract's validation logic
+			}
+			// If a different magic value is returned, the signature is considered invalid
+		} catch {
+			// If the call reverts, the contract might not implement ERC1271
+			// We'll fall through to the OwnerManager check
+		}
+
+		// As a final check, verify if the signer is registered as an owner in the OwnerManager
+		return OwnerManager(account).isOwner(signer);
 	}
 
 	/**

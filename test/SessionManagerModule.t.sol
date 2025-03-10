@@ -32,6 +32,10 @@ contract SessionManagerModuleTest is Test {
 	uint256 public ownerPrivateKey;
 	address public owner;
 
+	uint256 public providerPrivateKey;
+	address public provider;
+	address public providerAccount;
+
 	UpgradeableCommunityTokenScript upgradeableCommunityTokenScript;
 
 	Utils public utils = new Utils();
@@ -65,6 +69,10 @@ contract SessionManagerModuleTest is Test {
 
 	uint256 private constant SIGNATURE_OFFSET = 84;
 
+	// out of memory optimization for tests
+	UserOperation userOp;
+	UserOperation userOp1;
+
 	function _bytes32ToUint256(bytes32 b) public pure returns (uint256) {
 		return uint256(b);
 	}
@@ -75,7 +83,13 @@ contract SessionManagerModuleTest is Test {
 			: vm.envUint("PRIVATE_KEY");
 		owner = vm.addr(ownerPrivateKey);
 
+		providerPrivateKey = isAnvil()
+			? 77_814_517_325_470_205_911_140_941_194_401_928_579_557_062_014_761_831_930_645_393_041_380_819_009_409
+			: vm.envUint("PRIVATE_KEY");
+		provider = vm.addr(providerPrivateKey);
+
 		vm.deal(owner, 100 ether);
+		vm.deal(provider, 100 ether);
 
 		// Deploy the safe singleton
 		SafeSuiteSetupScript setupScript = new SafeSuiteSetupScript();
@@ -119,6 +133,8 @@ contract SessionManagerModuleTest is Test {
 
 		paymaster.updateWhitelist(whitelistedAddresses);
 
+		providerAccount = accountFactory.createAccount(provider, 0);
+
 		vendorPrivateKey = 0x1234567890123456789012345678901234567890123456789012345678901234;
 		vendor = accountFactory.createAccount(vm.addr(vendorPrivateKey), 0);
 
@@ -126,12 +142,12 @@ contract SessionManagerModuleTest is Test {
 		badVendor = accountFactory.createAccount(vm.addr(badVendorPrivateKey), 0);
 
 		sessionSalt1 = keccak256(abi.encodePacked("+32478121212:sms"));
-		twoFAFactory.createAccount(owner, _bytes32ToUint256(sessionSalt1));
-		account1 = twoFAFactory.getAddress(owner, _bytes32ToUint256(sessionSalt1));
+		twoFAFactory.createAccount(providerAccount, _bytes32ToUint256(sessionSalt1));
+		account1 = twoFAFactory.getAddress(providerAccount, _bytes32ToUint256(sessionSalt1));
 
 		sessionSalt2 = keccak256(abi.encodePacked("+32478343434:sms"));
-		twoFAFactory.createAccount(owner, _bytes32ToUint256(sessionSalt2));
-		account2 = twoFAFactory.getAddress(owner, _bytes32ToUint256(sessionSalt2));
+		twoFAFactory.createAccount(providerAccount, _bytes32ToUint256(sessionSalt2));
+		account2 = twoFAFactory.getAddress(providerAccount, _bytes32ToUint256(sessionSalt2));
 
 		accounts = new address[](2);
 		accounts[0] = account1;
@@ -144,12 +160,12 @@ contract SessionManagerModuleTest is Test {
 
 	function testTwoFAFactory() public view {
 		assertEq(
-			twoFAFactory.getAddress(owner, _bytes32ToUint256(sessionSalt1)),
+			twoFAFactory.getAddress(providerAccount, _bytes32ToUint256(sessionSalt1)),
 			account1,
 			"Account should be created"
 		);
 		assertEq(
-			twoFAFactory.getAddress(owner, _bytes32ToUint256(sessionSalt2)),
+			twoFAFactory.getAddress(providerAccount, _bytes32ToUint256(sessionSalt2)),
 			account2,
 			"Account should be created"
 		);
@@ -209,7 +225,9 @@ contract SessionManagerModuleTest is Test {
 
 		uint48 expiry = uint48(block.timestamp + 300);
 
-		_addSession(sessionPrivateKey, ownerPrivateKey, sessionSalt1, expiry);
+		_addSession(sessionPrivateKey, providerPrivateKey, providerAccount, sessionSalt1, expiry);
+
+		console.log("sessionOwner", sessionOwner);
 
 		assertEq(ownerManager.isOwner(sessionOwner), true, "Session owner should be an owner");
 	}
@@ -219,7 +237,7 @@ contract SessionManagerModuleTest is Test {
 
 		uint48 expiry = uint48(block.timestamp + 300);
 
-		_addSession(sessionPrivateKey, ownerPrivateKey, sessionSalt1, expiry);
+		_addSession(sessionPrivateKey, providerPrivateKey, providerAccount, sessionSalt1, expiry);
 
 		bytes memory initCode = bytes("");
 
@@ -257,7 +275,7 @@ contract SessionManagerModuleTest is Test {
 
 		uint48 expiry = uint48(block.timestamp + 2);
 
-		_addSession(sessionPrivateKey, ownerPrivateKey, sessionSalt1, expiry);
+		_addSession(sessionPrivateKey, providerPrivateKey, providerAccount, sessionSalt1, expiry);
 
 		vm.warp(block.timestamp + 3);
 
@@ -284,7 +302,7 @@ contract SessionManagerModuleTest is Test {
 
 		uint48 expiry = uint48(block.timestamp + 300);
 
-		_addSession(sessionPrivateKey, ownerPrivateKey, sessionSalt1, expiry);
+		_addSession(sessionPrivateKey, providerPrivateKey, providerAccount, sessionSalt1, expiry);
 
 		assertEq(ownerManager.isOwner(sessionOwner), true, "Session owner should be an owner");
 
@@ -325,7 +343,7 @@ contract SessionManagerModuleTest is Test {
 
 		uint48 expiry = uint48(block.timestamp + 300);
 
-		_addSession(sessionPrivateKey, ownerPrivateKey, sessionSalt1, expiry);
+		_addSession(sessionPrivateKey, providerPrivateKey, providerAccount, sessionSalt1, expiry);
 
 		assertEq(ownerManager.isOwner(sessionOwner), true, "Session owner should be an owner");
 
@@ -342,36 +360,52 @@ contract SessionManagerModuleTest is Test {
 	}
 
 	function _addSession(
-		uint256 sessionPrivateKey,
-		uint256 providerPrivateKey,
-		bytes32 sessionSalt,
-		uint48 expiry
+		uint256 _sessionPrivateKey,
+		uint256 _providerPrivateKey,
+		address _provider,
+		bytes32 _sessionSalt,
+		uint48 _expiry
 	) private {
-		address sessionOwner = vm.addr(sessionPrivateKey);
-
-		console.log("SESSION OWNER", sessionOwner);
+		address sessionOwner = vm.addr(_sessionPrivateKey);
 
 		// Create session request hash and signature
-		bytes32 sessionRequestHash = createSessionRequestHash(owner, sessionOwner, sessionSalt1, expiry);
-		bytes memory signedSessionRequestHash = _signMessage(sessionPrivateKey, sessionRequestHash);
+		bytes32 sessionRequestHash = createSessionRequestHash(_provider, sessionOwner, _sessionSalt, _expiry);
+		bytes memory signedSessionRequestHash = _signMessage(_sessionPrivateKey, sessionRequestHash);
 
 		// Create session hash and signatures
 		bytes32 challengeHash = keccak256(abi.encodePacked(uint256(123456)));
 		bytes32 sessionHash = createSessionHash(sessionRequestHash, challengeHash);
 
-		bytes memory providerSignedSessionHash = _signMessage(ownerPrivateKey, sessionHash);
-		bytes memory sessionOwnerSignedSessionHash = _signMessage(sessionPrivateKey, sessionHash);
+		bytes memory providerSignedSessionHash = _signMessage(_providerPrivateKey, sessionHash);
+		bytes memory sessionOwnerSignedSessionHash = _signMessage(_sessionPrivateKey, sessionHash);
 
-		vm.startBroadcast(providerPrivateKey);
-		sessionManagerModule.request(
-			sessionSalt,
+		bytes memory initCode = bytes("");
+
+		bytes memory data = abi.encodeWithSignature(
+			"request(bytes32,bytes32,bytes,bytes,uint48)",
+			_sessionSalt,
 			sessionRequestHash,
 			signedSessionRequestHash,
 			providerSignedSessionHash,
-			expiry
+			_expiry
 		);
-		sessionManagerModule.confirm(sessionRequestHash, sessionHash, sessionOwnerSignedSessionHash);
-		vm.stopBroadcast();
+
+		userOp = createUserOperation(_provider, initCode, address(sessionManagerModule), data);
+
+		userOp = prepareSignedUserOp(userOp, _providerPrivateKey);
+		executeUserOp(userOp);
+
+		bytes memory data1 = abi.encodeWithSignature(
+			"confirm(bytes32,bytes32,bytes)",
+			sessionRequestHash,
+			sessionHash,
+			sessionOwnerSignedSessionHash
+		);
+
+		userOp1 = createUserOperation(_provider, initCode, address(sessionManagerModule), data1);
+
+		userOp1 = prepareSignedUserOp(userOp1, _providerPrivateKey);
+		executeUserOp(userOp1);
 	}
 
 	// Helper function to sign a message and return the signature
@@ -490,5 +524,15 @@ contract SessionManagerModuleTest is Test {
 
 	function isAnvil() private view returns (bool) {
 		return block.chainid == 31_337;
+	}
+
+	function prepareSignedUserOp(
+		UserOperation memory userOp,
+		uint256 privateKey
+	) internal returns (UserOperation memory) {
+		(bytes memory paymasterData, bytes memory signature) = signUserOp(userOp, privateKey);
+		userOp.paymasterAndData = paymasterData;
+		userOp.signature = signature;
+		return userOp;
 	}
 }
