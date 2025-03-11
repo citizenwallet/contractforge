@@ -40,7 +40,7 @@ contract SessionManagerModule is
 	UUPSUpgradeable
 {
 	string public constant NAME = "Session Module";
-	string public constant VERSION = "0.0.2";
+	string public constant VERSION = "0.0.3";
 
 	////////////////
 
