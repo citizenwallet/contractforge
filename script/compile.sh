@@ -4,6 +4,7 @@
 # cd "$(dirname "$0")"
 
 # Create a directory for the ABIs if it doesn't exist
+rm -rf lib/abi
 mkdir -p lib/abi
 
 # Loop through all contract files
