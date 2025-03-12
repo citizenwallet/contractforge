@@ -1,1376 +1,167 @@
-[
-  {
-    "type": "function",
-    "name": "BADGE_ADMIN_ROLE",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "BADGE_CLAIM_ADMIN_ROLE",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "BADGE_COLLECTION_ADMIN_ROLE",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "DEFAULT_ADMIN_ROLE",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "UPGRADE_INTERFACE_VERSION",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "archive",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "badges",
-    "inputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "claimFrom",
-        "type": "uint48",
-        "internalType": "uint48"
-      },
-      {
-        "name": "claimTo",
-        "type": "uint48",
-        "internalType": "uint48"
-      },
-      {
-        "name": "maxClaim",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "updateUntil",
-        "type": "uint48",
-        "internalType": "uint48"
-      },
-      {
-        "name": "archived",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "balanceOf",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "balanceOfBatch",
-    "inputs": [
-      {
-        "name": "accounts",
-        "type": "address[]",
-        "internalType": "address[]"
-      },
-      {
-        "name": "ids",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "claim",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "claimFor",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "to",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "claims",
-    "inputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "create",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "claimFrom",
-        "type": "uint48",
-        "internalType": "uint48"
-      },
-      {
-        "name": "claimTo",
-        "type": "uint48",
-        "internalType": "uint48"
-      },
-      {
-        "name": "maxClaim",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "updateUntil",
-        "type": "uint48",
-        "internalType": "uint48"
-      },
-      {
-        "name": "_uri",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "exists",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "get",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "claimFrom",
-        "type": "uint48",
-        "internalType": "uint48"
-      },
-      {
-        "name": "claimTo",
-        "type": "uint48",
-        "internalType": "uint48"
-      },
-      {
-        "name": "maxClaim",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "updateUntil",
-        "type": "uint48",
-        "internalType": "uint48"
-      },
-      {
-        "name": "_uri",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getRoleAdmin",
-    "inputs": [
-      {
-        "name": "role",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "grantRole",
-    "inputs": [
-      {
-        "name": "role",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "hasRole",
-    "inputs": [
-      {
-        "name": "role",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "initialize",
-    "inputs": [
-      {
-        "name": "_owner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "isApprovedForAll",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "operator",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "owner",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "proxiableUUID",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "renounceOwnership",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "renounceRole",
-    "inputs": [
-      {
-        "name": "role",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "callerConfirmation",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "revokeRole",
-    "inputs": [
-      {
-        "name": "role",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "safeBatchTransferFrom",
-    "inputs": [
-      {
-        "name": "from",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "to",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "ids",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      },
-      {
-        "name": "values",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      },
-      {
-        "name": "data",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "safeTransferFrom",
-    "inputs": [
-      {
-        "name": "from",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "to",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "value",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "data",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "setApprovalForAll",
-    "inputs": [
-      {
-        "name": "operator",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "approved",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "supportsInterface",
-    "inputs": [
-      {
-        "name": "interfaceId",
-        "type": "bytes4",
-        "internalType": "bytes4"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "transferOwnership",
-    "inputs": [
-      {
-        "name": "newOwner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "updateClaimRange",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "claimFrom",
-        "type": "uint48",
-        "internalType": "uint48"
-      },
-      {
-        "name": "claimTo",
-        "type": "uint48",
-        "internalType": "uint48"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "updateContent",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "_uri",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "updateMaxClaim",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxClaim",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "upgradeToAndCall",
-    "inputs": [
-      {
-        "name": "newImplementation",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "data",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "payable"
-  },
-  {
-    "type": "function",
-    "name": "uri",
-    "inputs": [
-      {
-        "name": "tokenId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "event",
-    "name": "ApprovalForAll",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "operator",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "approved",
-        "type": "bool",
-        "indexed": false,
-        "internalType": "bool"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "BadgeArchived",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "BadgeClaimRangeUpdated",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "claimFrom",
-        "type": "uint48",
-        "indexed": false,
-        "internalType": "uint48"
-      },
-      {
-        "name": "claimTo",
-        "type": "uint48",
-        "indexed": false,
-        "internalType": "uint48"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "BadgeCreated",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "claimFrom",
-        "type": "uint48",
-        "indexed": false,
-        "internalType": "uint48"
-      },
-      {
-        "name": "claimTo",
-        "type": "uint48",
-        "indexed": false,
-        "internalType": "uint48"
-      },
-      {
-        "name": "maxClaim",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "updateUntil",
-        "type": "uint48",
-        "indexed": false,
-        "internalType": "uint48"
-      },
-      {
-        "name": "uri",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "BadgeMaxClaimUpdated",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxClaim",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "BadgeUpdated",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "uri",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "Initialized",
-    "inputs": [
-      {
-        "name": "version",
-        "type": "uint64",
-        "indexed": false,
-        "internalType": "uint64"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "OwnershipTransferred",
-    "inputs": [
-      {
-        "name": "previousOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "newOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "RoleAdminChanged",
-    "inputs": [
-      {
-        "name": "role",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "previousAdminRole",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "newAdminRole",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "RoleGranted",
-    "inputs": [
-      {
-        "name": "role",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "account",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "sender",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "RoleRevoked",
-    "inputs": [
-      {
-        "name": "role",
-        "type": "bytes32",
-        "indexed": true,
-        "internalType": "bytes32"
-      },
-      {
-        "name": "account",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "sender",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "TransferBatch",
-    "inputs": [
-      {
-        "name": "operator",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "from",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "to",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "ids",
-        "type": "uint256[]",
-        "indexed": false,
-        "internalType": "uint256[]"
-      },
-      {
-        "name": "values",
-        "type": "uint256[]",
-        "indexed": false,
-        "internalType": "uint256[]"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "TransferSingle",
-    "inputs": [
-      {
-        "name": "operator",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "from",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "to",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "id",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "value",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "URI",
-    "inputs": [
-      {
-        "name": "value",
-        "type": "string",
-        "indexed": false,
-        "internalType": "string"
-      },
-      {
-        "name": "id",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "Upgraded",
-    "inputs": [
-      {
-        "name": "implementation",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "error",
-    "name": "AccessControlBadConfirmation",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "AccessControlUnauthorizedAccount",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "neededRole",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "AddressEmptyCode",
-    "inputs": [
-      {
-        "name": "target",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "AfterClaimPeriod",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "BadgeAlreadyArchived",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "BeforeClaimPeriod",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "DoesNotExist",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "ERC1155InsufficientBalance",
-    "inputs": [
-      {
-        "name": "sender",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "balance",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "needed",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "tokenId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "ERC1155InvalidApprover",
-    "inputs": [
-      {
-        "name": "approver",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "ERC1155InvalidArrayLength",
-    "inputs": [
-      {
-        "name": "idsLength",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "valuesLength",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "ERC1155InvalidOperator",
-    "inputs": [
-      {
-        "name": "operator",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "ERC1155InvalidReceiver",
-    "inputs": [
-      {
-        "name": "receiver",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "ERC1155InvalidSender",
-    "inputs": [
-      {
-        "name": "sender",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "ERC1155MissingApprovalForAll",
-    "inputs": [
-      {
-        "name": "operator",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "owner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "ERC1967InvalidImplementation",
-    "inputs": [
-      {
-        "name": "implementation",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "ERC1967NonPayable",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "EmptyURI",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "Exists",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "FailedInnerCall",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidClaimRange",
-    "inputs": [
-      {
-        "name": "claimFrom",
-        "type": "uint48",
-        "internalType": "uint48"
-      },
-      {
-        "name": "claimTo",
-        "type": "uint48",
-        "internalType": "uint48"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "InvalidInitialization",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InvalidUpdateUntil",
-    "inputs": [
-      {
-        "name": "updateUntil",
-        "type": "uint48",
-        "internalType": "uint48"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "MaximumClaimsReached",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "NotClaimAdmin",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "NotInitializing",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "NotManager",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "OwnableInvalidOwner",
-    "inputs": [
-      {
-        "name": "owner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "OwnableUnauthorizedAccount",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "UUPSUnauthorizedCallContext",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "UUPSUnsupportedProxiableUUID",
-    "inputs": [
-      {
-        "name": "slot",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "UpdateBlocked",
-    "inputs": [
-      {
-        "name": "id",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
-  }
-]
+
+╭----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------╮
+| Type     | Signature                                                                   | Selector                                                           |
++=============================================================================================================================================================+
+| event    | ApprovalForAll(address,address,bool)                                        | 0x17307eab39ab6107e8899845ad3d59bd9653f200f220920489ca2b5937696c31 |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| event    | BadgeArchived(uint256)                                                      | 0x1360d7b2eeac3c707137a8c28e7cc4b7bb8978ae4b97084af1bf32f1e1e1e85a |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| event    | BadgeClaimRangeUpdated(uint256,uint48,uint48)                               | 0xc0162ddc7835b664a3c0cdf83f1107d3f1b88afb41cf4f3b2abdc369d3b07904 |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| event    | BadgeCreated(uint256,uint48,uint48,uint256,uint48,string)                   | 0xcb93548d7c49fa357f3bebc73aa8211c7cd2d70878164acd63bdc37091ab58de |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| event    | BadgeMaxClaimUpdated(uint256,uint256)                                       | 0x97e14babc8874935f154183775921c5a74a366f97f650b16f2cfadab95143cf7 |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| event    | BadgeUpdated(uint256,string)                                                | 0xf8104afbd111614568b2e305524302c432b586aafbb619b17be992e08e17fb2e |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| event    | Initialized(uint64)                                                         | 0xc7f505b2f371ae2175ee4913f4499e1f2633a7b5936321eed1cdaeb6115181d2 |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| event    | OwnershipTransferred(address,address)                                       | 0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0 |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| event    | RoleAdminChanged(bytes32,bytes32,bytes32)                                   | 0xbd79b86ffe0ab8e8776151514217cd7cacd52c909f66475c3af44e129f0b00ff |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| event    | RoleGranted(bytes32,address,address)                                        | 0x2f8788117e7eff1d82e926ec794901d17c78024a50270940304540a733656f0d |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| event    | RoleRevoked(bytes32,address,address)                                        | 0xf6391f5c32d9c69d2a47ea670b442974b53935d1edc7fd64eb21e047a839171b |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| event    | TransferBatch(address,address,address,uint256[],uint256[])                  | 0x4a39dc06d4c0dbc64b70af90fd698a233a518aa5d07e595d983b8c0526c8f7fb |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| event    | TransferSingle(address,address,address,uint256,uint256)                     | 0xc3d58168c5ae7397731d063d5bbf3d657854427343f4c083240f7aacaa2d0f62 |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| event    | URI(string,uint256)                                                         | 0x6bb7ff708619ba0610cba295a58592e0451dee2622938c8755667688daf3529b |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| event    | Upgraded(address)                                                           | 0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | AccessControlBadConfirmation()                                              | 0x6697b232                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | AccessControlUnauthorizedAccount(address,bytes32)                           | 0xe2517d3f                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | AddressEmptyCode(address)                                                   | 0x9996b315                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | AfterClaimPeriod()                                                          | 0x249e7c95                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | BadgeAlreadyArchived(uint256)                                               | 0x89d39b4f                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | BeforeClaimPeriod()                                                         | 0xc78fdd57                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | DoesNotExist(uint256)                                                       | 0x1ee2c4e1                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | ERC1155InsufficientBalance(address,uint256,uint256,uint256)                 | 0x03dee4c5                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | ERC1155InvalidApprover(address)                                             | 0x3e31884e                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | ERC1155InvalidArrayLength(uint256,uint256)                                  | 0x5b059991                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | ERC1155InvalidOperator(address)                                             | 0xced3e100                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | ERC1155InvalidReceiver(address)                                             | 0x57f447ce                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | ERC1155InvalidSender(address)                                               | 0x01a83514                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | ERC1155MissingApprovalForAll(address,address)                               | 0xe237d922                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | ERC1967InvalidImplementation(address)                                       | 0x4c9c8ce3                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | ERC1967NonPayable()                                                         | 0xb398979f                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | EmptyURI()                                                                  | 0xd07b00d6                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | Exists(uint256)                                                             | 0x6674b790                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | FailedInnerCall()                                                           | 0x1425ea42                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | InvalidClaimRange(uint48,uint48)                                            | 0xd3f30f4f                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | InvalidInitialization()                                                     | 0xf92ee8a9                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | InvalidUpdateUntil(uint48)                                                  | 0xbeb29a6f                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | MaximumClaimsReached(uint256)                                               | 0x5bb06db7                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | NotClaimAdmin(address)                                                      | 0x92b15577                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | NotInitializing()                                                           | 0xd7e6bcf8                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | NotManager(address)                                                         | 0x2a19e833                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | OwnableInvalidOwner(address)                                                | 0x1e4fbdf7                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | OwnableUnauthorizedAccount(address)                                         | 0x118cdaa7                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | UUPSUnauthorizedCallContext()                                               | 0xe07c8dba                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | UUPSUnsupportedProxiableUUID(bytes32)                                       | 0xaa1d49a4                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| error    | UpdateBlocked(uint256)                                                      | 0x93d62a5f                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | BADGE_ADMIN_ROLE() view returns (bytes32)                                   | 0x1f801e27                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | BADGE_CLAIM_ADMIN_ROLE() view returns (bytes32)                             | 0xdb07af5c                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | BADGE_COLLECTION_ADMIN_ROLE() view returns (bytes32)                        | 0xf06f7aa3                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | DEFAULT_ADMIN_ROLE() view returns (bytes32)                                 | 0xa217fddf                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | UPGRADE_INTERFACE_VERSION() view returns (string)                           | 0xad3cb1cc                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | archive(uint256) nonpayable                                                 | 0x93c829fc                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | badges(uint256) view returns (uint48,uint48,uint256,uint48,bool)            | 0x98e36d8b                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | balanceOf(address,uint256) view returns (uint256)                           | 0x00fdd58e                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | balanceOfBatch(address[],uint256[]) view returns (uint256[])                | 0x4e1273f4                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | claim(uint256) nonpayable                                                   | 0x379607f5                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | claimFor(uint256,address) nonpayable                                        | 0x10ee3f00                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | claims(uint256,address) view returns (uint256)                              | 0x1da4c66b                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | create(uint256,uint48,uint48,uint256,uint48,string) nonpayable              | 0xcdec75a5                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | exists(uint256) view returns (bool)                                         | 0x4f558e79                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | get(uint256) view returns (uint48,uint48,uint256,uint48,string)             | 0x9507d39a                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | getRoleAdmin(bytes32) view returns (bytes32)                                | 0x248a9ca3                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | grantRole(bytes32,address) nonpayable                                       | 0x2f2ff15d                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | hasRole(bytes32,address) view returns (bool)                                | 0x91d14854                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | initialize(address) nonpayable                                              | 0xc4d66de8                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | isApprovedForAll(address,address) view returns (bool)                       | 0xe985e9c5                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | owner() view returns (address)                                              | 0x8da5cb5b                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | proxiableUUID() view returns (bytes32)                                      | 0x52d1902d                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | renounceOwnership() nonpayable                                              | 0x715018a6                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | renounceRole(bytes32,address) nonpayable                                    | 0x36568abe                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | revokeRole(bytes32,address) nonpayable                                      | 0xd547741f                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | safeBatchTransferFrom(address,address,uint256[],uint256[],bytes) nonpayable | 0x2eb2c2d6                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | safeTransferFrom(address,address,uint256,uint256,bytes) nonpayable          | 0xf242432a                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | setApprovalForAll(address,bool) nonpayable                                  | 0xa22cb465                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | supportsInterface(bytes4) view returns (bool)                               | 0x01ffc9a7                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | transferOwnership(address) nonpayable                                       | 0xf2fde38b                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | updateClaimRange(uint256,uint48,uint48) nonpayable                          | 0xaf07e8b8                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | updateContent(uint256,string) nonpayable                                    | 0x25612dc6                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | updateMaxClaim(uint256,uint256) nonpayable                                  | 0xeae811d8                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | upgradeToAndCall(address,bytes) payable                                     | 0x4f1ef286                                                         |
+|----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function | uri(uint256) view returns (string)                                          | 0x0e89341c                                                         |
+╰----------+-----------------------------------------------------------------------------+--------------------------------------------------------------------╯
+

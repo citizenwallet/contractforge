@@ -1,273 +1,33 @@
-[
-  {
-    "type": "constructor",
-    "inputs": [
-      {
-        "name": "_communityModule",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_cardManagerModule",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "CARD_MANAGER_MODULE",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "COMMUNITY_MODULE",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "NAME",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "VERSION",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "string",
-        "internalType": "string"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "createAccount",
-    "inputs": [
-      {
-        "name": "_owner",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_nonce",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "createChainSpecificProxyWithNonce",
-    "inputs": [
-      {
-        "name": "_singleton",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "initializer",
-        "type": "bytes",
-        "internalType": "bytes"
-      },
-      {
-        "name": "saltNonce",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "proxy",
-        "type": "address",
-        "internalType": "contract SafeProxy"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "createProxyWithCallback",
-    "inputs": [
-      {
-        "name": "_singleton",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "initializer",
-        "type": "bytes",
-        "internalType": "bytes"
-      },
-      {
-        "name": "saltNonce",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "callback",
-        "type": "address",
-        "internalType": "contract IProxyCreationCallback"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "proxy",
-        "type": "address",
-        "internalType": "contract SafeProxy"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "createProxyWithNonce",
-    "inputs": [
-      {
-        "name": "_singleton",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "initializer",
-        "type": "bytes",
-        "internalType": "bytes"
-      },
-      {
-        "name": "saltNonce",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "proxy",
-        "type": "address",
-        "internalType": "contract SafeProxy"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "enableModules",
-    "inputs": [
-      {
-        "name": "_safe",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_safeModules",
-        "type": "address[]",
-        "internalType": "address[]"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "payable"
-  },
-  {
-    "type": "function",
-    "name": "getAddress",
-    "inputs": [
-      {
-        "name": "_owner",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_nonce",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getChainId",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "proxyCreationCode",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
-    ],
-    "stateMutability": "pure"
-  },
-  {
-    "type": "event",
-    "name": "ProxyCreation",
-    "inputs": [
-      {
-        "name": "proxy",
-        "type": "address",
-        "indexed": true,
-        "internalType": "contract SafeProxy"
-      },
-      {
-        "name": "singleton",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
-  }
-]
+
+╭-------------+------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------╮
+| Type        | Signature                                                                                            | Selector                                                           |
++=========================================================================================================================================================================================+
+| event       | ProxyCreation(SafeProxy,address)                                                                     | 0x4f51faf6c4561ff95f067657e43439f0f856d97c04d9ec9070a6199ad418e235 |
+|-------------+------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | CARD_MANAGER_MODULE() view returns (address)                                                         | 0xa36d944a                                                         |
+|-------------+------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | COMMUNITY_MODULE() view returns (address)                                                            | 0x9702dfb1                                                         |
+|-------------+------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | NAME() view returns (string)                                                                         | 0xa3f4df7e                                                         |
+|-------------+------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | VERSION() view returns (string)                                                                      | 0xffa1ad74                                                         |
+|-------------+------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | createAccount(address,uint256) nonpayable returns (address)                                          | 0x5fbfb9cf                                                         |
+|-------------+------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | createChainSpecificProxyWithNonce(address,bytes,uint256) nonpayable returns (SafeProxy)              | 0xec9e80bb                                                         |
+|-------------+------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | createProxyWithCallback(address,bytes,uint256,IProxyCreationCallback) nonpayable returns (SafeProxy) | 0xd18af54d                                                         |
+|-------------+------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | createProxyWithNonce(address,bytes,uint256) nonpayable returns (SafeProxy)                           | 0x1688f0b9                                                         |
+|-------------+------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | enableModules(address,address[]) payable                                                             | 0xbb009c6c                                                         |
+|-------------+------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | getAddress(address,uint256) view returns (address)                                                   | 0x8cb84e18                                                         |
+|-------------+------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | getChainId() view returns (uint256)                                                                  | 0x3408e470                                                         |
+|-------------+------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | proxyCreationCode() pure returns (bytes)                                                             | 0x53e5d935                                                         |
+|-------------+------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------|
+| constructor | constructor(address,address) nonpayable                                                              |                                                                    |
+╰-------------+------------------------------------------------------------------------------------------------------+--------------------------------------------------------------------╯
+

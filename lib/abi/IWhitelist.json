@@ -1,21 +1,7 @@
-[
-  {
-    "type": "function",
-    "name": "isWhitelisted",
-    "inputs": [
-      {
-        "name": "addr",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  }
-]
+
+╭----------+--------------------------------------------+------------╮
+| Type     | Signature                                  | Selector   |
++====================================================================+
+| function | isWhitelisted(address) view returns (bool) | 0x3af32abf |
+╰----------+--------------------------------------------+------------╯
+
