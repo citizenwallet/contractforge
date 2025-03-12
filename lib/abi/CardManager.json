@@ -1,234 +1,33 @@
-[
-  {
-    "type": "constructor",
-    "inputs": [
-      {
-        "name": "_owner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "cardImplementation",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "contract Card"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "contractExists",
-    "inputs": [
-      {
-        "name": "contractAddress",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "createCard",
-    "inputs": [
-      {
-        "name": "cardHash",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "ret",
-        "type": "address",
-        "internalType": "contract Card"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "getCardAddress",
-    "inputs": [
-      {
-        "name": "cardHash",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "getCardHash",
-    "inputs": [
-      {
-        "name": "serial",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "initialize",
-    "inputs": [
-      {
-        "name": "_entryPoint",
-        "type": "address",
-        "internalType": "contract IEntryPoint"
-      },
-      {
-        "name": "_tokenEntryPoint",
-        "type": "address",
-        "internalType": "contract ITokenEntryPoint"
-      },
-      {
-        "name": "_whitelistAddresses",
-        "type": "address[]",
-        "internalType": "address[]"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "isWhitelisted",
-    "inputs": [
-      {
-        "name": "addr",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "owner",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "transferCardOwnership",
-    "inputs": [
-      {
-        "name": "cardHash",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "newOwner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "updateWhitelist",
-    "inputs": [
-      {
-        "name": "addresses",
-        "type": "address[]",
-        "internalType": "address[]"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "withdraw",
-    "inputs": [
-      {
-        "name": "cardHash",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "token",
-        "type": "address",
-        "internalType": "contract IERC20"
-      },
-      {
-        "name": "to",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "event",
-    "name": "CardCreated",
-    "inputs": [
-      {
-        "name": "voucher",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "error",
-    "name": "AlreadyInitializing",
-    "inputs": []
-  }
-]
+
+╭-------------+---------------------------------------------------------------+--------------------------------------------------------------------╮
+| Type        | Signature                                                     | Selector                                                           |
++==================================================================================================================================================+
+| event       | CardCreated(address)                                          | 0x5a88fac48723245815c0b404c9689ef9de8251085a0232d064c93226aa190fb7 |
+|-------------+---------------------------------------------------------------+--------------------------------------------------------------------|
+| error       | AlreadyInitializing()                                         | 0x593ae075                                                         |
+|-------------+---------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | cardImplementation() view returns (Card)                      | 0x9a79c18e                                                         |
+|-------------+---------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | contractExists(address) view returns (bool)                   | 0x7709bc78                                                         |
+|-------------+---------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | createCard(bytes32) nonpayable returns (Card)                 | 0x15aba274                                                         |
+|-------------+---------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | getCardAddress(bytes32) view returns (address)                | 0x943c9cbe                                                         |
+|-------------+---------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | getCardHash(uint256) view returns (bytes32)                   | 0x9b77940f                                                         |
+|-------------+---------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | initialize(IEntryPoint,ITokenEntryPoint,address[]) nonpayable | 0x77a24f36                                                         |
+|-------------+---------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | isWhitelisted(address) view returns (bool)                    | 0x3af32abf                                                         |
+|-------------+---------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | owner() view returns (address)                                | 0x8da5cb5b                                                         |
+|-------------+---------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | transferCardOwnership(bytes32,address) nonpayable             | 0xc637e1b5                                                         |
+|-------------+---------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | updateWhitelist(address[]) nonpayable                         | 0x35377214                                                         |
+|-------------+---------------------------------------------------------------+--------------------------------------------------------------------|
+| function    | withdraw(bytes32,IERC20,address,uint256) nonpayable           | 0x8e0cc176                                                         |
+|-------------+---------------------------------------------------------------+--------------------------------------------------------------------|
+| constructor | constructor(address) nonpayable                               |                                                                    |
+╰-------------+---------------------------------------------------------------+--------------------------------------------------------------------╯
+

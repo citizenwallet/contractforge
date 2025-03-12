@@ -1,42 +1,13 @@
-[
-  {
-    "type": "function",
-    "name": "count",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "decrement",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "getCount",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "increment",
-    "inputs": [],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  }
-]
+
+╭----------+-----------------------------------+------------╮
+| Type     | Signature                         | Selector   |
++===========================================================+
+| function | count() view returns (uint256)    | 0x06661abd |
+|----------+-----------------------------------+------------|
+| function | decrement() nonpayable            | 0x2baeceb7 |
+|----------+-----------------------------------+------------|
+| function | getCount() view returns (uint256) | 0xa87d942c |
+|----------+-----------------------------------+------------|
+| function | increment() nonpayable            | 0xd09de08a |
+╰----------+-----------------------------------+------------╯
+
