@@ -13,7 +13,7 @@ do
   name=$(basename "$contract" .sol)
   
   # Generate ABI and save to file
-  forge inspect "$contract:$name" abi > "lib/abi/$name.json"
+  forge inspect "$contract:$name" abi --json > "lib/abi/$name.json"
   
   echo "Generated ABI for $name"
 done
