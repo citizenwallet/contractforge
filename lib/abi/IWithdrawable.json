@@ -1,7 +1,25 @@
-
-╭----------+-----------------------------------------------+------------╮
-| Type     | Signature                                     | Selector   |
-+=======================================================================+
-| function | withdrawTo(IERC20,address,uint256) nonpayable | 0xc3b35a7e |
-╰----------+-----------------------------------------------+------------╯
-
+[
+  {
+    "type": "function",
+    "name": "withdrawTo",
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address",
+        "internalType": "contract IERC20"
+      },
+      {
+        "name": "to",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  }
+]
