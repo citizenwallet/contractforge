@@ -8,11 +8,12 @@ import { Upgrades } from "openzeppelin-foundry-upgrades/Upgrades.sol";
 import { INonceManager } from "account-abstraction/interfaces/INonceManager.sol";
 
 import { CommunityModule } from "../src/Modules/Community/CommunityModule.sol";
+import { Paymaster } from "../src/Modules/Community/Paymaster.sol";
 
 import { Create2 } from "../src/Create2/Create2.sol";
 
-contract CommunityModuleScript is Script {
-	function deploy() public returns (CommunityModule) {
+contract CommunityAndPaymasterModuleScript is Script {
+	function deploy(address[] calldata addresses) public returns (CommunityModule, Paymaster) {
 		uint256 deployerPrivateKey = isAnvil()
 			? 77_814_517_325_470_205_911_140_941_194_401_928_579_557_062_014_761_831_930_645_393_041_380_819_009_408
 			: vm.envUint("PRIVATE_KEY");
@@ -54,17 +55,23 @@ contract CommunityModuleScript is Script {
 		if (communityProxy == address(0)) {
 			console.log("CommunityModule proxy deployment failed");
 			vm.stopBroadcast();
-			return CommunityModule(address(0));
+			return (CommunityModule(address(0)), Paymaster(address(0)));
 		}
 
 		console.log("CommunityModule implementation created at: ", address(communityImplementation));
 		console.log("CommunityModule proxy created at: ", communityProxy);
 
+		address paymasterImplementation = address(new Paymaster());
+
+		bytes memory data = abi.encodeCall(Paymaster.initialize, (deployer, addresses));
+		address paymasterProxy = address(new ERC1967Proxy(paymasterImplementation, data));
+
 		vm.stopBroadcast();
 
 		console.log("communityProxy: %s", communityProxy);
+		console.log("paymasterProxy: %s", paymasterProxy);
 
-		return CommunityModule(communityProxy);
+		return (CommunityModule(communityProxy), Paymaster(paymasterProxy));
 	}
 
 	function isAnvil() private view returns (bool) {

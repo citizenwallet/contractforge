@@ -20,12 +20,10 @@ contract UpgradeableCommunityToken is
 	UUPSUpgradeable
 {
 	bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-	bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 	bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     // Custom errors
     error MustHaveMinterRole(address account);
-    error MustHaveBurnerRole(address account);
 
 	function initialize(
 		address _owner,
@@ -41,12 +39,10 @@ contract UpgradeableCommunityToken is
 		_grantRole(DEFAULT_ADMIN_ROLE, _owner);
 
 		_setRoleAdmin(MINTER_ROLE, DEFAULT_ADMIN_ROLE);
-		_setRoleAdmin(BURNER_ROLE, DEFAULT_ADMIN_ROLE);
 		_setRoleAdmin(PAUSER_ROLE, DEFAULT_ADMIN_ROLE);
 
 		for (uint256 i = 0; i < minters.length; i++) {
 			_grantRole(MINTER_ROLE, minters[i]);
-			_grantRole(BURNER_ROLE, minters[i]);
 		}
 	}
 
@@ -60,7 +56,7 @@ contract UpgradeableCommunityToken is
 	}
 
 	function burnFrom(address from, uint256 amount) public override {
-        if (!hasRole(BURNER_ROLE, msg.sender)) revert MustHaveBurnerRole(msg.sender);
+        if (!hasRole(MINTER_ROLE, msg.sender)) revert MustHaveMinterRole(msg.sender);
 		_burn(from, amount);
 	}
 

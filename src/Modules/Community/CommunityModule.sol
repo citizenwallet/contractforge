@@ -2,6 +2,8 @@
 pragma solidity ^0.8.20;
 
 import { Safe, OwnerManager, ModuleManager, Enum } from "safe-smart-account/contracts/Safe.sol";
+import { Guard } from "safe-smart-account/contracts/base/GuardManager.sol";
+import { StorageAccessible } from "safe-smart-account/contracts/common/StorageAccessible.sol";
 import { CompatibilityFallbackHandler } from "safe-smart-account/contracts/handler/CompatibilityFallbackHandler.sol";
 
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -36,9 +38,12 @@ contract CommunityModule is
 	UUPSUpgradeable
 {
 	string public constant NAME = "Community Module";
-	string public constant VERSION = "0.0.1";
+	string public constant VERSION = "0.0.2";
 
 	////////////////
+
+	// keccak256("guard_manager.guard.address")
+	bytes32 internal constant GUARD_STORAGE_SLOT = 0x4a204f620c8c5ccdca3fd54d003badd85ba500436a431f0cbda4f558c93c34c8;
 
 	bytes32 private constant DOMAIN_SEPARATOR_TYPEHASH =
 		0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f;
@@ -139,14 +144,29 @@ contract CommunityModule is
 			// verify call data
 			_validateCallData(op);
 
+			// call the initCode
+			if (seq == 0 && !_contractExists(sender)) {
+				_initAccount(op, sender);
+			}
+
+			address guard = _getSafeGuard(sender);
+
+			if (guard != address(0)) {
+				_preCallGuard(guard, to, value, data, op);
+			}
+
 			// verify account
-			_validateAccount(op, sender, seq, key);
+			_validateAccount(op, sender, key);
 
 			// verify paymaster signature
 			_validatePaymasterUserOp(op);
 
 			// execute the op
-			_call(sender, to, value, data);
+			bool success = _call(sender, to, value, data);
+
+			if (guard != address(0)) {
+				_postCallGuard(guard, op, success);
+			}
 
 			unchecked {
 				++i;
@@ -173,12 +193,7 @@ contract CommunityModule is
 	 * @param op The user operation to validate.
 	 * @param sender The address of the sender of the user operation.
 	 */
-	function _validateAccount(UserOperation calldata op, address sender, uint64 seq, uint192 key) internal virtual {
-		// call the initCode
-		if (seq == 0 && !_contractExists(sender)) {
-			_initAccount(op, sender);
-		}
-
+	function _validateAccount(UserOperation calldata op, address sender, uint192 key) internal virtual {
 		// verify the user op signature
 		require(validateUserOp(op, getUserOpHash(op)), "AA24 signature error");
 
@@ -311,6 +326,41 @@ contract CommunityModule is
 		return size > 0;
 	}
 
+	function _getSafeGuard(address safe) internal virtual returns (address) {
+		uint256 offset = uint256(GUARD_STORAGE_SLOT);
+		bytes memory storageData = StorageAccessible(safe).getStorageAt(offset, 1);
+		address guard = address(uint160(uint256(bytes32(storageData))));
+		return guard;
+	}
+
+	function _preCallGuard(
+		address guard,
+		address to,
+		uint256 value,
+		bytes memory data,
+		UserOperation calldata op
+	) internal virtual {
+		address sender = op.getSender();
+
+		Guard(guard).checkTransaction(
+			to,
+			value,
+			data,
+			Enum.Operation.Call,
+			0,
+			0,
+			0,
+			address(0),
+			payable(0),
+			op.signature,
+			sender
+		);
+	}
+
+	function _postCallGuard(address guard, UserOperation calldata op, bool success) internal virtual {
+		Guard(guard).checkAfterExecution(op.hash(), success);
+	}
+
 	/**
 	 * @dev Internal function to call a contract with value and data.
 	 * If the call fails, it reverts with the reason returned by the callee.
@@ -319,7 +369,7 @@ contract CommunityModule is
 	 * @param value The amount of ether to send with the call.
 	 * @param data The data to send with the call.
 	 */
-	function _call(address sender, address to, uint256 value, bytes memory data) internal {
+	function _call(address sender, address to, uint256 value, bytes memory data) internal returns (bool) {
 		(bool success, bytes memory result) = Safe(payable(sender)).execTransactionFromModuleReturnData(
 			to,
 			value,
@@ -331,6 +381,8 @@ contract CommunityModule is
 				revert(add(result, 32), mload(result))
 			}
 		}
+
+		return success;
 	}
 
 	function _authorizeUpgrade(address newImplementation) internal view override onlyOwner {
