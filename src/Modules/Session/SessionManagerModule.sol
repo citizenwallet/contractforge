@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import {console} from "forge-std/Test.sol";
+
 import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -31,6 +33,8 @@ error FailedToAddSigner();
 error FailedToRemoveSigner();
 error SignerNotOwner();
 error SignerAlreadyExists();
+error ArrayLimitExceeded();
+error InvalidSessionData();
 contract SessionManagerModule is
 	CompatibilityFallbackHandler,
 	BaseGuard,
@@ -76,7 +80,7 @@ contract SessionManagerModule is
 	// VARIABLES
 	address public twoFAFactory;
 	mapping(address => mapping(bytes32 => SessionRequest)) public sessionRequests;
-	ActiveSession[] public activeSessions;
+	mapping(address => ActiveSession[]) public activeSessions;
 
 	/////////////////////////////////////////////////
 	// EVENTS
@@ -173,6 +177,11 @@ contract SessionManagerModule is
 	 * @custom:emits Confirmed event with provider, account, and session owner addresses
 	 */
 	function confirm(bytes32 sessionRequestHash, bytes32 sessionHash, bytes calldata ownerSignedSessionHash) external {
+		// Validate input parameters
+		if (sessionRequestHash == 0 || sessionHash == 0 || ownerSignedSessionHash.length == 0) {
+			revert InvalidSessionData();
+		}
+
 		// check if session request exists
 		SessionRequest memory sessionRequest = sessionRequests[msg.sender][sessionRequestHash];
 		if (sessionRequest.owner == address(0)) {
@@ -204,8 +213,13 @@ contract SessionManagerModule is
 		// add session owner as signer
 		_addSigner(sessionRequest.account, sessionRequest.owner);
 
-		// set expiry
-		activeSessions.push(
+		// set expiry with array bounds check
+		uint256 currentLength = activeSessions[sessionRequest.account].length;
+		if (currentLength >= type(uint256).max) {
+			revert ArrayLimitExceeded();
+		}
+		
+		activeSessions[sessionRequest.account].push(
 			ActiveSession({
 				owner: sessionRequest.owner,
 				account: sessionRequest.account,
@@ -258,6 +272,13 @@ contract SessionManagerModule is
 	function _addSigner(address account, address newSigner) internal {
 		if (!contractExists(account)) {
 			revert AccountNotCreated();
+		}
+
+		// if amount of owners is 50 or greater, remove the last owner
+		// 50 is the theoretical max amount of owners for a Safe
+		uint256 ownerAmount = OwnerManager(account).getOwners().length;
+		if ((ownerAmount + 1) > 50) {
+			_removeSigner(account, OwnerManager(account).getOwners()[ownerAmount - 1]);
 		}
 
 		uint256 threshold = OwnerManager(account).getThreshold();
@@ -361,18 +382,44 @@ contract SessionManagerModule is
 	 * @custom:security This function is called automatically by the Guard's checkTransaction function
 	 *                  before any transaction execution to ensure expired sessions are properly cleaned up
 	 */
-	function removeExpiredSessions() public {
-		if (activeSessions.length == 0) {
+	function removeExpiredSessions(address sender) public {
+		if (activeSessions[sender].length == 0) {
 			return;
 		}
 
-		for (uint256 i = 0; i < activeSessions.length; i++) {
-			if (activeSessions[i].expiry < block.timestamp) {
-				_removeSigner(activeSessions[i].account, activeSessions[i].owner);
+		OwnerManager ownerManager = OwnerManager(sender);
 
-				delete activeSessions[i];
+		for (uint256 i = 0; i < activeSessions[sender].length; i++) {
+			// remove expired sessions
+			if (activeSessions[sender][i].expiry < block.timestamp) {
+				_removeSigner(activeSessions[sender][i].account, activeSessions[sender][i].owner);
+
+				delete activeSessions[sender][i];
+			}
+
+			// clean up sessions that are not owners anymore
+			if (!ownerManager.isOwner(activeSessions[sender][i].owner)) {
+				delete activeSessions[sender][i];
 			}
 		}
+	}
+
+	function isExpired(address account, address owner) public view returns (bool) {
+		bool owner = OwnerManager(account).isOwner(owner);
+		if (!owner) {
+			return true;
+		}
+
+		bool expired = false;
+
+		for (uint256 i = 0; i < activeSessions[account].length; i++) {
+			if (activeSessions[account][i].expiry < block.timestamp) {
+				expired = true;
+				break;
+			}
+		}
+
+		return expired;
 	}
 
 	/////////////////////////////////////////////////
@@ -396,9 +443,9 @@ contract SessionManagerModule is
 		address /*gasToken*/,
 		address payable /*refundReceiver*/,
 		bytes memory /*signatures*/,
-		address /*msgSender*/
+		address msgSender
 	) external override {
-		removeExpiredSessions();
+		removeExpiredSessions(msgSender);
 	}
 
 	/**

@@ -222,6 +222,7 @@ contract SessionManagerModuleTest is Test {
 
 		OwnerManager ownerManager = OwnerManager(account1);
 		assertEq(ownerManager.isOwner(sessionOwner), false, "Session owner should not be an owner");
+		assertEq(sessionManagerModule.isExpired(account1, sessionOwner), true, "Session should be expired");
 
 		uint48 expiry = uint48(block.timestamp + 300);
 
@@ -230,6 +231,27 @@ contract SessionManagerModuleTest is Test {
 		console.log("sessionOwner", sessionOwner);
 
 		assertEq(ownerManager.isOwner(sessionOwner), true, "Session owner should be an owner");
+		assertEq(sessionManagerModule.isExpired(account1, sessionOwner), false, "Session should not be expired");
+	}
+
+	function testAddingMaxSessions() public {
+		OwnerManager ownerManager = OwnerManager(account1);
+		uint48 expiry = uint48(block.timestamp + 300);
+
+		for (uint256 i = 0; i < 55; i++) {
+			console.log("i", i);
+
+			uint256 sessionPrivateKey = 0x1234567890123456789012345678901234567890123456789012345678901236 + i;
+			address sessionOwner = vm.addr(sessionPrivateKey);
+
+			_addSession(sessionPrivateKey, providerPrivateKey, providerAccount, sessionSalt1, expiry);
+
+			assertEq(ownerManager.isOwner(sessionOwner), true, "Session owner should be an owner");
+
+			if (i >= 50) {
+				assertEq(ownerManager.getOwners().length, 50, "Last session should be removed to stay at max 50 owners");
+			}
+		}
 	}
 
 	function testTransfer() public {

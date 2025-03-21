@@ -20,6 +20,7 @@ contract NetworkUtilsScript is Test, SafeSingletonFixtureTest {
     }
 
     function checkNetwork() public {
+        console.log("Deploying to rpc ", getChain(block.chainid).rpcUrl);
         // 1. Network check
         emit log_string(string(abi.encodePacked("Deploying to rpc ", getChain(block.chainid).rpcUrl)));
 

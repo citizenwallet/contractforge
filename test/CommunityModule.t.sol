@@ -36,7 +36,6 @@ contract CommunityModuleTest is Test {
 	Paymaster public paymaster;
 	AccountFactory public accountFactory;
 	UpgradeableCommunityToken public token;
-	address public safeSingleton;
 	address[] public safes;
 
 	uint256 private constant VALID_TIMESTAMP_OFFSET = 20;
@@ -54,8 +53,6 @@ contract CommunityModuleTest is Test {
 		// Deploy the safe singleton
 		SafeSuiteSetupScript setupScript = new SafeSuiteSetupScript();
 		setupScript.run();
-
-		safeSingleton = setupScript.SAFE_SINGLETON_ADDRESS();
 
 		DeploymentScript deploymentScript = new DeploymentScript();
 		deploymentScript.fundDeployer();
