@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {console} from "forge-std/Test.sol";
+import { console } from "forge-std/Test.sol";
 
 import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -218,7 +218,7 @@ contract SessionManagerModule is
 		if (currentLength >= type(uint256).max) {
 			revert ArrayLimitExceeded();
 		}
-		
+
 		activeSessions[sessionRequest.account].push(
 			ActiveSession({
 				owner: sessionRequest.owner,
@@ -404,17 +404,17 @@ contract SessionManagerModule is
 		}
 	}
 
-	function isExpired(address account, address owner) public view returns (bool) {
-		bool owner = OwnerManager(account).isOwner(owner);
+	function isExpired(address account, address _owner) public view returns (bool) {
+		bool owner = OwnerManager(account).isOwner(_owner);
 		if (!owner) {
 			return true;
 		}
 
-		bool expired = false;
+		bool expired = true;
 
 		for (uint256 i = 0; i < activeSessions[account].length; i++) {
-			if (activeSessions[account][i].expiry < block.timestamp) {
-				expired = true;
+			if (activeSessions[account][i].owner == _owner && activeSessions[account][i].expiry >= block.timestamp) {
+				expired = false;
 				break;
 			}
 		}
@@ -513,7 +513,7 @@ contract SessionManagerModule is
 	function _isOwnerSignature(address account, bytes32 _hash, bytes memory _signature) internal view returns (bool) {
 		// First, recover the signer address from the signature
 		address signer = _recoverEthSignedSigner(_hash, _signature);
-		
+
 		// If recovery failed (returned address zero), the signature is invalid
 		if (signer == address(0)) {
 			return false;
