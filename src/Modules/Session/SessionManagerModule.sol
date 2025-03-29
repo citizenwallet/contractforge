@@ -24,6 +24,7 @@ import { SessionRequest, ActiveSession } from "./SessionRequest.sol";
 import { toEthSignedMessageHash } from "../../utils/Helpers.sol";
 
 error SessionRequestExpired();
+error ChallengeExpired();
 error SessionOwnerIsProvider();
 error InvalidProvider();
 error SessionRequestNotFound();
@@ -119,7 +120,8 @@ contract SessionManagerModule is
 	 * @param sessionRequestHash Hash of the session request data
 	 * @param signedSessionRequestHash Signature of the session request hash by the session owner
 	 * @param signedSessionHash Signature of the session hash by the provider
-	 * @param sessionRequestExpiry Timestamp when the session request expires (0 for no expiry)
+	 * @param sessionExpiry Timestamp when the session request expires (0 for no expiry)
+	 * @param challengeExpiry Timestamp when the challenge expires (0 for no challenge)
 	 * @custom:throws SessionRequestExpired if the expiry timestamp is in the past
 	 * @custom:throws SessionOwnerIsProvider if the recovered session owner is the same as the provider
 	 * @custom:emits Requested event with provider address and session request hash
@@ -129,12 +131,17 @@ contract SessionManagerModule is
 		bytes32 sessionRequestHash,
 		bytes calldata signedSessionRequestHash,
 		bytes calldata signedSessionHash,
-		uint48 sessionRequestExpiry
+		uint48 sessionExpiry,
+		uint48 challengeExpiry
 	) external {
-		// TODO: add a uint48 challengeExpiry as well to expire the session request after a certain time, ok for now
-		// make sure challengeExpiry is in the future
-		if (sessionRequestExpiry > 0 && sessionRequestExpiry < block.timestamp) {
+		// make sure sessionExpiry is in the future
+		if (sessionExpiry > 0 && sessionExpiry < block.timestamp) {
 			revert SessionRequestExpired();
+		}
+
+		// make sure challengeExpiry is in the future
+		if (challengeExpiry > 0 && challengeExpiry < block.timestamp) {
+			revert ChallengeExpired();
 		}
 
 		// provider is sender
@@ -143,6 +150,9 @@ contract SessionManagerModule is
 		// get account address and deploy account if it doesn't exist
 		uint256 salt = _bytes32ToUint256(sessionSalt);
 		address account = TwoFAFactory(twoFAFactory).createAccount(provider, salt);
+
+		// Increment Safe's nonce to sync with ERC-4337 entrypoint
+		_incrementSafeNonce(account);
 
 		// recover session owner
 		address sessionOwner = _recoverEthSignedSigner(sessionRequestHash, signedSessionRequestHash);
@@ -154,7 +164,8 @@ contract SessionManagerModule is
 
 		// save session request
 		sessionRequests[provider][sessionRequestHash] = SessionRequest({
-			expiry: sessionRequestExpiry,
+			expiry: sessionExpiry,
+			challengeExpiry: challengeExpiry,
 			signedSessionHash: signedSessionHash,
 			provider: provider,
 			owner: sessionOwner,
@@ -191,6 +202,11 @@ contract SessionManagerModule is
 		// check if session request has expired
 		if (sessionRequest.expiry > 0 && sessionRequest.expiry < block.timestamp) {
 			revert SessionRequestExpired();
+		}
+
+		// make sure challengeExpiry is in the future
+		if (sessionRequest.challengeExpiry > 0 && sessionRequest.challengeExpiry < block.timestamp) {
+			revert ChallengeExpired();
 		}
 
 		// provider is sender
@@ -600,6 +616,16 @@ contract SessionManagerModule is
 		require(signer != address(0x0), "SignatureValidator#recoverSigner: INVALID_SIGNER");
 
 		return signer;
+	}
+
+	/**
+	 * @notice Increments the Safe's internal nonce by executing a no-op transaction
+	 * @dev This is needed to sync the Safe's nonce with the ERC-4337 entrypoint's nonce
+	 * @param account The address of the Safe account
+	 */
+	function _incrementSafeNonce(address account) internal {
+		bytes memory data = "";
+		ModuleManager(account).execTransactionFromModule(account, 0, data, Enum.Operation.Call);
 	}
 
 	/////////////////////////////////////////////////
