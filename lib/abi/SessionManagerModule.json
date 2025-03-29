@@ -587,7 +587,12 @@
         "internalType": "bytes"
       },
       {
-        "name": "sessionRequestExpiry",
+        "name": "sessionExpiry",
+        "type": "uint48",
+        "internalType": "uint48"
+      },
+      {
+        "name": "challengeExpiry",
         "type": "uint48",
         "internalType": "uint48"
       }
@@ -626,6 +631,11 @@
     "outputs": [
       {
         "name": "expiry",
+        "type": "uint48",
+        "internalType": "uint48"
+      },
+      {
+        "name": "challengeExpiry",
         "type": "uint48",
         "internalType": "uint48"
       },
@@ -885,6 +895,11 @@
   {
     "type": "error",
     "name": "ArrayLimitExceeded",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ChallengeExpired",
     "inputs": []
   },
   {
