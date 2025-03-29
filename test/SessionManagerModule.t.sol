@@ -226,12 +226,31 @@ contract SessionManagerModuleTest is Test {
 
 		uint48 expiry = uint48(block.timestamp + 300);
 
-		_addSession(sessionPrivateKey, providerPrivateKey, providerAccount, sessionSalt1, expiry);
-
-		console.log("sessionOwner", sessionOwner);
+		_addSession(
+			sessionPrivateKey,
+			providerPrivateKey,
+			providerAccount,
+			sessionSalt1,
+			expiry
+		);
 
 		assertEq(ownerManager.isOwner(sessionOwner), true, "Session owner should be an owner");
 		assertEq(sessionManagerModule.isExpired(account1, sessionOwner), false, "Session should not be expired");
+	}
+
+	function testAddingASessionTooLate() public {
+		uint256 sessionPrivateKey = 0x1234567890123456789012345678901234567890123456789012345678901236;
+		address sessionOwner = vm.addr(sessionPrivateKey);
+
+		OwnerManager ownerManager = OwnerManager(account1);
+		assertEq(ownerManager.isOwner(sessionOwner), false, "Session owner should not be an owner");
+		assertEq(sessionManagerModule.isExpired(account1, sessionOwner), true, "Session should be expired");
+
+		uint48 expiry = uint48(block.timestamp + 300);
+
+		_addLateSession(sessionPrivateKey, providerPrivateKey, providerAccount, sessionSalt1, expiry);
+
+		assertEq(ownerManager.isOwner(sessionOwner), false, "Session owner should not be an owner");
 	}
 
 	function testAddingMaxSessions() public {
@@ -249,7 +268,11 @@ contract SessionManagerModuleTest is Test {
 			assertEq(ownerManager.isOwner(sessionOwner), true, "Session owner should be an owner");
 
 			if (i >= 50) {
-				assertEq(ownerManager.getOwners().length, 50, "Last session should be removed to stay at max 50 owners");
+				assertEq(
+					ownerManager.getOwners().length,
+					50,
+					"Last session should be removed to stay at max 50 owners"
+				);
 			}
 		}
 	}
@@ -388,46 +411,105 @@ contract SessionManagerModuleTest is Test {
 		bytes32 _sessionSalt,
 		uint48 _expiry
 	) private {
-		address sessionOwner = vm.addr(_sessionPrivateKey);
+		// Move some variable declarations to a separate helper function
+		(
+			bytes32 sessionRequestHash,
+			bytes32 sessionHash,
+			bytes memory signedSessionRequestHash
+		) = _prepareSessionHashes(_sessionPrivateKey, _provider, _sessionSalt, _expiry);
 
-		// Create session request hash and signature
-		bytes32 sessionRequestHash = createSessionRequestHash(_provider, sessionOwner, _sessionSalt, _expiry);
-		bytes memory signedSessionRequestHash = _signMessage(_sessionPrivateKey, sessionRequestHash);
+		bytes memory initCode = "";
 
-		// Create session hash and signatures
-		bytes32 challengeHash = keccak256(abi.encodePacked(uint256(123456)));
-		bytes32 sessionHash = createSessionHash(sessionRequestHash, challengeHash);
-
-		bytes memory providerSignedSessionHash = _signMessage(_providerPrivateKey, sessionHash);
-		bytes memory sessionOwnerSignedSessionHash = _signMessage(_sessionPrivateKey, sessionHash);
-
-		bytes memory initCode = bytes("");
-
+		// First transaction
 		bytes memory data = abi.encodeWithSignature(
-			"request(bytes32,bytes32,bytes,bytes,uint48)",
+			"request(bytes32,bytes32,bytes,bytes,uint48,uint48)",
 			_sessionSalt,
 			sessionRequestHash,
 			signedSessionRequestHash,
-			providerSignedSessionHash,
-			_expiry
+			_signMessage(_providerPrivateKey, sessionHash),
+			_expiry,
+			uint48(block.timestamp + 300)
 		);
 
 		userOp = createUserOperation(_provider, initCode, address(sessionManagerModule), data);
-
 		userOp = prepareSignedUserOp(userOp, _providerPrivateKey);
 		executeUserOp(userOp);
 
+		// Second transaction
 		bytes memory data1 = abi.encodeWithSignature(
 			"confirm(bytes32,bytes32,bytes)",
 			sessionRequestHash,
 			sessionHash,
-			sessionOwnerSignedSessionHash
+			_signMessage(_sessionPrivateKey, sessionHash)
 		);
 
 		userOp1 = createUserOperation(_provider, initCode, address(sessionManagerModule), data1);
-
 		userOp1 = prepareSignedUserOp(userOp1, _providerPrivateKey);
 		executeUserOp(userOp1);
+	}
+
+	function _addLateSession(
+		uint256 _sessionPrivateKey,
+		uint256 _providerPrivateKey,
+		address _provider,
+		bytes32 _sessionSalt,
+		uint48 _expiry
+	) private {
+		// Move some variable declarations to a separate helper function
+		(
+			bytes32 sessionRequestHash,
+			bytes32 sessionHash,
+			bytes memory signedSessionRequestHash
+		) = _prepareSessionHashes(_sessionPrivateKey, _provider, _sessionSalt, _expiry);
+
+		bytes memory initCode = "";
+
+		// First transaction
+		bytes memory data = abi.encodeWithSignature(
+			"request(bytes32,bytes32,bytes,bytes,uint48,uint48)",
+			_sessionSalt,
+			sessionRequestHash,
+			signedSessionRequestHash,
+			_signMessage(_providerPrivateKey, sessionHash),
+			_expiry,
+			uint48(block.timestamp + 10)
+		);
+
+		userOp = createUserOperation(_provider, initCode, address(sessionManagerModule), data);
+		userOp = prepareSignedUserOp(userOp, _providerPrivateKey);
+		executeUserOp(userOp);
+
+		vm.warp(block.timestamp + 20);
+
+		// Second transaction
+		bytes memory data1 = abi.encodeWithSignature(
+			"confirm(bytes32,bytes32,bytes)",
+			sessionRequestHash,
+			sessionHash,
+			_signMessage(_sessionPrivateKey, sessionHash)
+		);
+
+		userOp1 = createUserOperation(_provider, initCode, address(sessionManagerModule), data1);
+		userOp1 = prepareSignedUserOp(userOp1, _providerPrivateKey);
+
+		vm.expectRevert(abi.encodeWithSignature("ChallengeExpired()"));
+		executeUserOp(userOp1);
+	}
+
+	// New helper function to reduce stack variables in main function
+	function _prepareSessionHashes(
+		uint256 _sessionPrivateKey,
+		address _provider,
+		bytes32 _sessionSalt,
+		uint48 _expiry
+	) private view returns (bytes32, bytes32, bytes memory) {
+		address sessionOwner = vm.addr(_sessionPrivateKey);
+		bytes32 sessionRequestHash = createSessionRequestHash(_provider, sessionOwner, _sessionSalt, _expiry);
+		bytes memory signedSessionRequestHash = _signMessage(_sessionPrivateKey, sessionRequestHash);
+		bytes32 challengeHash = keccak256(abi.encodePacked(uint256(123456)));
+		bytes32 sessionHash = createSessionHash(sessionRequestHash, challengeHash);
+
+		return (sessionRequestHash, sessionHash, signedSessionRequestHash);
 	}
 
 	// Helper function to sign a message and return the signature
