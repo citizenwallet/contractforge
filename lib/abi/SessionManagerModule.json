@@ -930,11 +930,6 @@
   },
   {
     "type": "error",
-    "name": "FailedToRemoveSigner",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "InvalidInitialization",
     "inputs": []
   },
