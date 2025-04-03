@@ -51,6 +51,10 @@ $ anvil
 $ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
 
 $ forge script script/anvil/CardManagerAnvil.s.sol:CardManagerAnvilScript --sig "deploy()"  --rpc-url http://127.0.0.1:8545
+
+$ forge script script/anvil/SafeSingleton.s.sol:SafeSingletonScript --sig "deploy()"  --rpc-url http://127.0.0.1:8545
+
+$ forge script script/anvil/SessionManagerModuleAnvil.s.sol:SessionManagerModuleAnvilScript --sig "deploy()"  --rpc-url http://127.0.0.1:8545
 ```
 
 ### Cast
@@ -77,7 +81,7 @@ Add `--broadcast` to the end of the following the actually publish.
 
 # Token
 ```shell
-$ forge script script/UpgradeableCommunityToken.s.sol:UpgradeableCommunityTokenScript --sig "deploy(address[], string, string)" "[0x123]" "My Token" "MT" --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $GNOSIS_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
+$ forge script script/UpgradeableCommunityToken.s.sol:UpgradeableCommunityTokenScript --sig "deploy(address[], string, string)" "[0xc7f0faE75ff61A28A6CC48C168469Bc5A0Ee39bd]" "DAO Brussels" "DAOB" --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $GNOSIS_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
 ```
 
 # Community Module
@@ -97,7 +101,7 @@ $ forge script script/CommunityAndPaymaster.s.sol:CommunityAndPaymasterModuleScr
 
 # Paymaster
 ```shell
-$ forge script script/Paymaster.s.sol:PaymasterDeploy --sig "deploy(address,address[])" 0x61a5c5aB3Bf53bD60aac8954e7904B0F97aA456e "[0x27F69bcDB85E6Ed437Ff3Efc114d7125B7338BFA]" --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $GNOSIS_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
+$ forge script script/Paymaster.s.sol:PaymasterDeploy --sig "deploy(address,address[])" 0xAD364095327753CC338e7cDF9752e039F51676F8 "[0x77917475e63E6f4e6966169E66c8FaB7dC891772,0x1371907cfe89Dc5022a3cB99ffBc4d7430f760cE,0xBA861e2DABd8316cf11Ae7CdA101d110CF581f28]" --rpc-url $CELO_MAINNET_RPC_URL --etherscan-api-key $CELO_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $CELO_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY --broadcast
 ```
 
 # Account Factory
@@ -112,7 +116,7 @@ $ forge script script/CardManagerModule.s.sol:CardManagerModuleScript --sig "dep
 
 # Session Manager
 ```shell
-$ forge script script/SessionManagerModule.s.sol:SessionManagerModuleScript --sig "deploy(address)" 0x7079253c0358eF9Fd87E16488299Ef6e06F403B6 --rpc-url $POLYGON_ZK_MAINNET_RPC_URL --etherscan-api-key $POLYGON_ZK_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $POLYGON_ZK_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
+$ forge script script/SessionManagerModule.s.sol:SessionManagerModuleScript --sig "deploy(address)" 0x7079253c0358eF9Fd87E16488299Ef6e06F403B6 --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $GNOSIS_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
 ```
 
 # Session Module Upgrade (v2)
