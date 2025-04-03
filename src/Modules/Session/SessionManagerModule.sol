@@ -235,13 +235,11 @@ contract SessionManagerModule is
 			revert ArrayLimitExceeded();
 		}
 
-		activeSessions[sessionRequest.account].push(
-			ActiveSession({
-				owner: sessionRequest.owner,
-				account: sessionRequest.account,
-				expiry: sessionRequest.expiry
-			})
-		);
+		_addActiveSession(ActiveSession({
+			owner: sessionRequest.owner,
+			account: sessionRequest.account,
+			expiry: sessionRequest.expiry
+		}));
 
 		// delete session request
 		delete sessionRequests[provider][sessionRequestHash];
@@ -320,10 +318,6 @@ contract SessionManagerModule is
 	function _removeSigner(address account, address signer) internal {
 		OwnerManager ownerManager = OwnerManager(account);
 
-		if (!ownerManager.isOwner(signer)) {
-			revert SignerNotOwner();
-		}
-
 		uint256 threshold = ownerManager.getThreshold();
 
 		// Need to find the previous owner in the linked list
@@ -344,10 +338,7 @@ contract SessionManagerModule is
 
 		bytes memory data = abi.encodeCall(OwnerManager.removeOwner, (prevOwner, currentOwner, threshold));
 
-		bool success = ModuleManager(account).execTransactionFromModule(account, 0, data, Enum.Operation.Call);
-		if (!success) {
-			revert FailedToRemoveSigner();
-		}
+		ModuleManager(account).execTransactionFromModule(account, 0, data, Enum.Operation.Call);
 	}
 
 	/**
@@ -391,6 +382,20 @@ contract SessionManagerModule is
 	/////////////////////////////////////////////////
 	// Session Management
 
+	function _addActiveSession(ActiveSession memory session) internal {
+		// Check if the owner already exists in the active sessions array
+		for (uint256 i = 0; i < activeSessions[session.account].length; i++) {
+			if (activeSessions[session.account][i].owner == session.owner) {
+				// Update the existing session with new data
+				activeSessions[session.account][i] = session;
+				return;
+			}
+		}
+		
+		// If owner not found, add as a new session
+		activeSessions[session.account].push(session);
+	}
+
 	/**
 	 * @notice Removes all expired sessions from active sessions
 	 * @dev Iterates through all active sessions, removes signers from accounts where sessions have expired,
@@ -411,6 +416,7 @@ contract SessionManagerModule is
 				_removeSigner(activeSessions[sender][i].account, activeSessions[sender][i].owner);
 
 				delete activeSessions[sender][i];
+				continue;
 			}
 
 			// clean up sessions that are not owners anymore

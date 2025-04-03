@@ -226,16 +226,42 @@ contract SessionManagerModuleTest is Test {
 
 		uint48 expiry = uint48(block.timestamp + 300);
 
-		_addSession(
-			sessionPrivateKey,
-			providerPrivateKey,
-			providerAccount,
-			sessionSalt1,
-			expiry
-		);
+		_addSession(sessionPrivateKey, providerPrivateKey, providerAccount, sessionSalt1, expiry);
 
 		assertEq(ownerManager.isOwner(sessionOwner), true, "Session owner should be an owner");
 		assertEq(sessionManagerModule.isExpired(account1, sessionOwner), false, "Session should not be expired");
+	}
+
+	function testAddingMultipleSessions() public {
+		uint256 sessionPrivateKey = 0x1234567890123456789012345678901234567890123456789012345678901236;
+		address sessionOwner = vm.addr(sessionPrivateKey);
+
+		OwnerManager ownerManager = OwnerManager(account1);
+		assertEq(ownerManager.isOwner(sessionOwner), false, "Session owner should not be an owner");
+		assertEq(sessionManagerModule.isExpired(account1, sessionOwner), true, "Session should be expired");
+
+		_addSession(sessionPrivateKey, providerPrivateKey, providerAccount, sessionSalt1, uint48(block.timestamp + 300));
+
+		assertEq(ownerManager.isOwner(sessionOwner), true, "Session owner should be an owner");
+		assertEq(sessionManagerModule.isExpired(account1, sessionOwner), false, "Session should not be expired");
+
+		vm.warp(block.timestamp + 200);
+
+		_revokeSession(sessionPrivateKey, account1);
+
+		assertEq(ownerManager.isOwner(sessionOwner), false, "Session owner should not be an owner");
+
+		_addSession(sessionPrivateKey, providerPrivateKey, providerAccount, sessionSalt1, uint48(block.timestamp + 300));
+
+		assertEq(ownerManager.isOwner(sessionOwner), true, "Session owner should be an owner");
+		assertEq(sessionManagerModule.isExpired(account1, sessionOwner), false, "Session should not be expired");
+
+		vm.warp(block.timestamp + 200);
+
+		_sendToken(sessionPrivateKey, account1, account2, 100000000);
+
+		assertEq(token.balanceOf(account1), 0, "Balance should be 0");
+		assertEq(token.balanceOf(account2), 100000000, "Balance should be 100000000");
 	}
 
 	function testAddingASessionTooLate() public {
@@ -288,7 +314,7 @@ contract SessionManagerModuleTest is Test {
 
 		bytes memory transferData = abi.encodeWithSignature("transfer(address,uint256)", account2, 100000000);
 
-		UserOperation memory userOp = createUserOperation(account1, initCode, address(token), transferData);
+		userOp = createUserOperation(account1, initCode, address(token), transferData);
 
 		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, sessionPrivateKey);
 		executeUserOp(userOp);
@@ -304,7 +330,7 @@ contract SessionManagerModuleTest is Test {
 
 		bytes memory transferData = abi.encodeWithSignature("transfer(address,uint256)", account2, 100000000);
 
-		UserOperation memory userOp = createUserOperation(account1, initCode, address(token), transferData);
+		userOp = createUserOperation(account1, initCode, address(token), transferData);
 
 		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, sessionPrivateKey);
 
@@ -313,6 +339,28 @@ contract SessionManagerModuleTest is Test {
 
 		assertEq(token.balanceOf(account1), 100000000, "Balance should be 100000000");
 		assertEq(token.balanceOf(account2), 0, "Balance should be 0");
+	}
+
+	function testLongSessionTransfer() public {
+		uint256 sessionPrivateKey = 0x1234567890123456789012345678901234567890123456789012345678901236;
+
+		uint48 expiry = uint48(block.timestamp + 100000);
+
+		_addSession(sessionPrivateKey, providerPrivateKey, providerAccount, sessionSalt1, expiry);
+
+		vm.warp(block.timestamp + 90000);
+
+		bytes memory initCode = bytes("");
+
+		bytes memory transferData = abi.encodeWithSignature("transfer(address,uint256)", account2, 100000000);
+
+		userOp = createUserOperation(account1, initCode, address(token), transferData);
+
+		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, sessionPrivateKey);
+		executeUserOp(userOp);
+
+		assertEq(token.balanceOf(account2), 100000000, "Balance should be 100000000");
+		assertEq(token.balanceOf(account1), 0, "Balance should be 0");
 	}
 
 	function testExpiredSessionTransfer() public {
@@ -328,7 +376,7 @@ contract SessionManagerModuleTest is Test {
 
 		bytes memory transferData = abi.encodeWithSignature("transfer(address,uint256)", account2, 100000000);
 
-		UserOperation memory userOp = createUserOperation(account1, initCode, address(token), transferData);
+		userOp = createUserOperation(account1, initCode, address(token), transferData);
 
 		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, sessionPrivateKey);
 		vm.expectRevert("AA24 signature error");
@@ -360,21 +408,14 @@ contract SessionManagerModuleTest is Test {
 
 		bytes memory data = abi.encodeWithSignature("addSigner(address)", session1Owner);
 
-		UserOperation memory userOp = createUserOperation(account1, initCode, address(sessionManagerModule), data);
+		userOp = createUserOperation(account1, initCode, address(sessionManagerModule), data);
 
 		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, sessionPrivateKey);
 		executeUserOp(userOp);
 
 		assertEq(ownerManager.isOwner(session1Owner), true, "Session1 owner should be an owner");
 
-		bytes memory initCode1 = bytes("");
-
-		bytes memory data1 = abi.encodeWithSignature("revoke(address)", session1Owner);
-
-		UserOperation memory userOp1 = createUserOperation(account1, initCode1, address(sessionManagerModule), data1);
-
-		(userOp1.paymasterAndData, userOp1.signature) = signUserOp(userOp1, sessionPrivateKey);
-		executeUserOp(userOp1);
+		_revokeSession(session1PrivateKey, account1);
 
 		assertEq(ownerManager.isOwner(session1Owner), false, "Session1 owner should not be an owner");
 	}
@@ -392,14 +433,7 @@ contract SessionManagerModuleTest is Test {
 
 		assertEq(ownerManager.isOwner(sessionOwner), true, "Session owner should be an owner");
 
-		bytes memory initCode = bytes("");
-
-		bytes memory data = abi.encodeWithSignature("revoke(address)", sessionOwner);
-
-		UserOperation memory userOp = createUserOperation(account1, initCode, address(sessionManagerModule), data);
-
-		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, sessionPrivateKey);
-		executeUserOp(userOp);
+		_revokeSession(sessionPrivateKey, account1);
 
 		assertEq(ownerManager.isOwner(sessionOwner), false, "Session owner should not be an owner");
 	}
@@ -446,6 +480,32 @@ contract SessionManagerModuleTest is Test {
 		userOp1 = createUserOperation(_provider, initCode, address(sessionManagerModule), data1);
 		userOp1 = prepareSignedUserOp(userOp1, _providerPrivateKey);
 		executeUserOp(userOp1);
+	}
+
+	function _revokeSession(
+		uint256 _sessionPrivateKey,
+		address _account
+	) private {
+		bytes memory initCode = bytes("");
+
+		address signerAddress = vm.addr(_sessionPrivateKey);
+
+		bytes memory data = abi.encodeWithSignature("revoke(address)", signerAddress);
+
+		userOp = createUserOperation(_account, initCode, address(sessionManagerModule), data);
+		userOp = prepareSignedUserOp(userOp, _sessionPrivateKey);
+		executeUserOp(userOp);
+	}
+
+	function _sendToken(uint256 _sessionPrivateKey, address _from, address _to, uint256 _amount) private {
+		bytes memory initCode = bytes("");
+
+		bytes memory transferData = abi.encodeWithSignature("transfer(address,uint256)", _to, _amount);
+
+		userOp = createUserOperation(_from, initCode, address(token), transferData);
+
+		(userOp.paymasterAndData, userOp.signature) = signUserOp(userOp, _sessionPrivateKey);
+		executeUserOp(userOp);
 	}
 
 	function _addLateSession(
@@ -520,12 +580,12 @@ contract SessionManagerModuleTest is Test {
 	}
 
 	function createSessionRequestHash(
-		address provider,
+		address _provider,
 		address sessionOwner,
 		bytes32 sessionSalt,
 		uint48 expiry
 	) private pure returns (bytes32) {
-		return keccak256(abi.encodePacked(provider, sessionOwner, sessionSalt, expiry));
+		return keccak256(abi.encodePacked(_provider, sessionOwner, sessionSalt, expiry));
 	}
 
 	function createSessionHash(bytes32 sessionRequestHash, bytes32 challengeHash) private pure returns (bytes32) {
@@ -570,9 +630,9 @@ contract SessionManagerModuleTest is Test {
 			});
 	}
 
-	function executeUserOp(UserOperation memory userOp) private {
+	function executeUserOp(UserOperation memory _userOp) private {
 		UserOperation[] memory userOperations = new UserOperation[](1);
-		userOperations[0] = userOp;
+		userOperations[0] = _userOp;
 
 		vm.startBroadcast(ownerPrivateKey);
 		communityModule.handleOps(userOperations, payable(owner));
@@ -580,19 +640,19 @@ contract SessionManagerModuleTest is Test {
 	}
 
 	function signUserOp(
-		UserOperation memory userOp,
+		UserOperation memory _userOp,
 		uint256 newOwnerPrivateKey
 	) private view returns (bytes memory, bytes memory) {
 		uint48 validUntil = uint48(block.timestamp + 1 hours);
 		uint48 validAfter = uint48(block.timestamp);
 
-		bytes32 paymasterHash = toEthSignedMessageHash(paymaster.getHash(userOp, validUntil, validAfter));
+		bytes32 paymasterHash = toEthSignedMessageHash(paymaster.getHash(_userOp, validUntil, validAfter));
 		(uint8 v, bytes32 r, bytes32 s) = vm.sign(ownerPrivateKey, paymasterHash);
 		bytes memory paymasterAndData = constructPaymasterAndData(validUntil, validAfter, abi.encodePacked(r, s, v));
 
-		userOp.paymasterAndData = paymasterAndData;
+		_userOp.paymasterAndData = paymasterAndData;
 
-		bytes32 userOperationHash = toEthSignedMessageHash(communityModule.getUserOpHash(userOp));
+		bytes32 userOperationHash = toEthSignedMessageHash(communityModule.getUserOpHash(_userOp));
 		(v, r, s) = vm.sign(newOwnerPrivateKey, userOperationHash);
 		bytes memory signature = abi.encodePacked(r, s, v);
 
@@ -631,12 +691,12 @@ contract SessionManagerModuleTest is Test {
 	}
 
 	function prepareSignedUserOp(
-		UserOperation memory userOp,
+		UserOperation memory _userOp,
 		uint256 privateKey
 	) internal returns (UserOperation memory) {
-		(bytes memory paymasterData, bytes memory signature) = signUserOp(userOp, privateKey);
-		userOp.paymasterAndData = paymasterData;
-		userOp.signature = signature;
-		return userOp;
+		(bytes memory paymasterData, bytes memory signature) = signUserOp(_userOp, privateKey);
+		_userOp.paymasterAndData = paymasterData;
+		_userOp.signature = signature;
+		return _userOp;
 	}
 }
