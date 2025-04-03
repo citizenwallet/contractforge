@@ -264,6 +264,41 @@ contract SessionManagerModuleTest is Test {
 		assertEq(token.balanceOf(account2), 100000000, "Balance should be 100000000");
 	}
 
+	function testAddingMultipleDifferentSessions() public {
+		uint256 sessionPrivateKey = 0x1234567890123456789012345678901234567890123456789012345678901236;
+		address sessionOwner = vm.addr(sessionPrivateKey);
+
+		uint256 sessionPrivateKey2 = 0x1234567890123456789012345678901234567890123456789012345678901237;
+		address sessionOwner2 = vm.addr(sessionPrivateKey2);
+
+		OwnerManager ownerManager = OwnerManager(account1);
+		assertEq(ownerManager.isOwner(sessionOwner), false, "Session owner should not be an owner");
+		assertEq(sessionManagerModule.isExpired(account1, sessionOwner), true, "Session should be expired");
+
+		_addSession(sessionPrivateKey, providerPrivateKey, providerAccount, sessionSalt1, uint48(block.timestamp + 300));
+
+		assertEq(ownerManager.isOwner(sessionOwner), true, "Session owner should be an owner");
+		assertEq(sessionManagerModule.isExpired(account1, sessionOwner), false, "Session should not be expired");
+
+		vm.warp(block.timestamp + 200);
+
+		_revokeSession(sessionPrivateKey, account1);
+
+		assertEq(ownerManager.isOwner(sessionOwner), false, "Session owner should not be an owner");
+
+		_addSession(sessionPrivateKey2, providerPrivateKey, providerAccount, sessionSalt1, uint48(block.timestamp + 300));
+
+		assertEq(ownerManager.isOwner(sessionOwner2), true, "Session owner should be an owner");
+		assertEq(sessionManagerModule.isExpired(account1, sessionOwner2), false, "Session should not be expired");
+
+		vm.warp(block.timestamp + 200);
+
+		_sendToken(sessionPrivateKey2, account1, account2, 100000000);
+
+		assertEq(token.balanceOf(account1), 0, "Balance should be 0");
+		assertEq(token.balanceOf(account2), 100000000, "Balance should be 100000000");
+	}
+
 	function testAddingASessionTooLate() public {
 		uint256 sessionPrivateKey = 0x1234567890123456789012345678901234567890123456789012345678901236;
 		address sessionOwner = vm.addr(sessionPrivateKey);
