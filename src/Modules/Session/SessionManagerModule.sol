@@ -151,9 +151,6 @@ contract SessionManagerModule is
 		uint256 salt = _bytes32ToUint256(sessionSalt);
 		address account = TwoFAFactory(twoFAFactory).createAccount(provider, salt);
 
-		// Increment Safe's nonce to sync with ERC-4337 entrypoint
-		_incrementSafeNonce(account);
-
 		// recover session owner
 		address sessionOwner = _recoverEthSignedSigner(sessionRequestHash, signedSessionRequestHash);
 
@@ -411,17 +408,18 @@ contract SessionManagerModule is
 		OwnerManager ownerManager = OwnerManager(sender);
 
 		for (uint256 i = 0; i < activeSessions[sender].length; i++) {
+			// clean up sessions that are not owners anymore
+			if (!ownerManager.isOwner(activeSessions[sender][i].owner)) {
+				delete activeSessions[sender][i];
+				continue;
+			}
+
 			// remove expired sessions
 			if (activeSessions[sender][i].expiry < block.timestamp) {
 				_removeSigner(activeSessions[sender][i].account, activeSessions[sender][i].owner);
 
 				delete activeSessions[sender][i];
 				continue;
-			}
-
-			// clean up sessions that are not owners anymore
-			if (!ownerManager.isOwner(activeSessions[sender][i].owner)) {
-				delete activeSessions[sender][i];
 			}
 		}
 	}
@@ -622,16 +620,6 @@ contract SessionManagerModule is
 		require(signer != address(0x0), "SignatureValidator#recoverSigner: INVALID_SIGNER");
 
 		return signer;
-	}
-
-	/**
-	 * @notice Increments the Safe's internal nonce by executing a no-op transaction
-	 * @dev This is needed to sync the Safe's nonce with the ERC-4337 entrypoint's nonce
-	 * @param account The address of the Safe account
-	 */
-	function _incrementSafeNonce(address account) internal {
-		bytes memory data = "";
-		ModuleManager(account).execTransactionFromModule(account, 0, data, Enum.Operation.Call);
 	}
 
 	/////////////////////////////////////////////////

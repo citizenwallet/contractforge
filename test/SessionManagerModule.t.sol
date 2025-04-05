@@ -293,7 +293,27 @@ contract SessionManagerModuleTest is Test {
 
 		vm.warp(block.timestamp + 200);
 
-		_sendToken(sessionPrivateKey2, account1, account2, 100000000);
+		_revokeSession(sessionPrivateKey2, account1);
+
+		assertEq(ownerManager.isOwner(sessionOwner2), false, "Session owner should not be an owner");
+
+		vm.warp(block.timestamp + 200);
+
+		_addSession(sessionPrivateKey2, providerPrivateKey, providerAccount, sessionSalt1, uint48(block.timestamp + 300));
+
+		assertEq(ownerManager.isOwner(sessionOwner2), true, "Session owner should be an owner");
+		assertEq(sessionManagerModule.isExpired(account1, sessionOwner2), false, "Session should not be expired");
+
+		vm.warp(block.timestamp + 200);
+
+		_sendToken(sessionPrivateKey2, account1, account2, 50000000);
+
+		assertEq(token.balanceOf(account1), 50000000, "Balance should be 50000000");
+		assertEq(token.balanceOf(account2), 50000000, "Balance should be 50000000");
+
+		vm.warp(block.timestamp + 100);
+
+		_sendToken(sessionPrivateKey2, account1, account2, 50000000);
 
 		assertEq(token.balanceOf(account1), 0, "Balance should be 0");
 		assertEq(token.balanceOf(account2), 100000000, "Balance should be 100000000");
