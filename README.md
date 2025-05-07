@@ -123,3 +123,8 @@ $ forge script script/SessionManagerModule.s.sol:SessionManagerModuleScript --si
 ```shell
 $ forge script script/upgrade/UpgradeSessionManagerModule.s.sol:UpgradeSessionManagerModuleScript --sig "run(address)" "0xE544c1dC66f65967863F03AEdEd38944E6b87309" --rpc-url $GNOSIS_MAINNET_RPC_URL --etherscan-api-key $GNOSIS_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $GNOSIS_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
 ```
+
+# Swapper
+```shell
+$ forge script script/OnRampSwapper.s.sol:OnRampSwapperScript --sig "deploy(address,address,address)" 0xCB9bD5aCD627e8FcCf9EB8d4ba72AEb1Cd8Ff5EF 0x14196F08a4Fa0B66B7331bC40dd6bCd8A1dEeA9F 0x2d900678a66df705D3F3184267eAf603d809d3c4 --rpc-url $POLYGON_AMOY_RPC_URL --etherscan-api-key $POLYGON_AMOY_ETHERSCAN_API_KEY --verify --verifier-url $POLYGON_AMOY_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
+```
