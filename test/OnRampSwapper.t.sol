@@ -66,6 +66,12 @@ contract NonPayableFallback {
     fallback() external {}
 }
 
+contract RevertingReceiver {
+    fallback() external payable {
+        revert("I don't accept ETH");
+    }
+}
+
 contract OnRampSwapperTest is Test {
     OnRampSwapper public swapper;
     MockCTZN public ctzn;
@@ -172,5 +178,15 @@ contract OnRampSwapperTest is Test {
         vm.deal(address(swapper), 1 ether);
         vm.deal(address(this), 1 ether);
         swapper.onRampAndSwap{value: 1 ether}(user, 0);
+    }
+
+    function testFailEmergencyWithdrawFailsIfTransferFails() public {
+        RevertingReceiver badOwner = new RevertingReceiver();
+        swapper.transferOwnership(address(badOwner));
+
+        vm.deal(address(swapper), 1 ether);
+
+        vm.prank(address(badOwner));
+        swapper.emergencyWithdraw();
     }
 }
