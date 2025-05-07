@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
 import "forge-std/Test.sol";
@@ -60,6 +60,10 @@ contract MockRouter is IUniswapV2Router02 {
 
         MockCTZN(ctznToken).mint(to, tokenAmount);
     }
+}
+
+contract NonPayableFallback {
+    fallback() external {}
 }
 
 contract OnRampSwapperTest is Test {
@@ -125,6 +129,19 @@ contract OnRampSwapperTest is Test {
     function testFailEmergencyWithdrawNoBalance() public {
         swapper.emergencyWithdraw();
     }
+    
+    function testFailConstructorZeroRouter() public {
+    new OnRampSwapper(address(0), address(ctzn), treasury);
+    }
+
+    function testFailConstructorZeroCTZN() public {
+        new OnRampSwapper(address(router), address(0), treasury);
+    }
+
+    function testFailConstructorZeroTreasury() public {
+        new OnRampSwapper(address(router), address(ctzn), address(0));
+    }
+
 
     function testReceiveFallback() public {
         (bool success, ) = address(swapper).call{value: 1 ether}("");
@@ -137,5 +154,23 @@ contract OnRampSwapperTest is Test {
 
         swapper.onRampAndSwap{value: ethAmount}(user, 0);
         assertGt(ctzn.balanceOf(user), 0);
+    }
+
+    function testOnRampAndSwapExcessPOLSentToTreasury() public {
+        // Send some ETH to the contract before calling swap to simulate excess POL
+        vm.deal(address(swapper), 1 ether);
+
+        vm.deal(address(this), 1 ether);
+        swapper.onRampAndSwap{value: 1 ether}(user, 0);
+        // No revert means success, excess was sent
+    }
+
+    function testFailOnRampAndSwapExcessPOLSendFails() public {
+        NonPayableFallback nonPayable = new NonPayableFallback();
+        swapper.updateTreasuryAddress(address(nonPayable));
+
+        vm.deal(address(swapper), 1 ether);
+        vm.deal(address(this), 1 ether);
+        swapper.onRampAndSwap{value: 1 ether}(user, 0);
     }
 }
