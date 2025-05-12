@@ -32,7 +32,7 @@ contract OnRampSwapper is Ownable, ReentrancyGuard {
         uint256 amountPOL = msg.value;
 
         address[] memory path = new address[](2);
-        path[0] = 0x0000000000000000000000000000000000001010; // Native POL (MATIC)
+        path[0] = 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270; //Wrapped POL (WPOL)
         path[1] = ctznToken;
 
         IUniswapV2Router02(quickswapRouter).swapExactETHForTokensSupportingFeeOnTransferTokens{ value: amountPOL }(
