@@ -9,7 +9,6 @@ interface ISwapRouter {
     struct ExactInputSingleParams {
         address tokenIn;
         address tokenOut;
-        uint24 fee;
         address recipient;
         uint256 deadline;
         uint256 amountIn;
@@ -63,7 +62,6 @@ contract OnRampSwapper is Ownable, ReentrancyGuard {
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
             tokenIn: wmatic,
             tokenOut: ctznToken,
-            fee: 3000,
             recipient: recipient,
             deadline: block.timestamp + 600,
             amountIn: amountPOL,
