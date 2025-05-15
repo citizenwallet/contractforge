@@ -38,29 +38,22 @@ contract MockCTZN is IERC20 {
     }
 }
 
-contract MockRouter is IUniswapV2Router02 {
-    address public ctznToken;
+contract MockRouter is ISwapRouter {
+    address public tokenOut;
 
-    constructor(address _ctznToken) {
-        ctznToken = _ctznToken;
+    constructor(address _tokenOut) {
+        tokenOut = _tokenOut;
     }
-
     receive() external payable {}
-
-    function swapExactETHForTokensSupportingFeeOnTransferTokens(
-        uint amountOutMin,
-        address[] calldata path,
-        address to,
-        uint deadline
-    ) external payable override {
-        require(msg.value > 0, "No ETH sent");
-        require(block.timestamp <= deadline, "Deadline passed");
-
-        uint256 tokenAmount = msg.value * 1000; // Simulate rate
-
-        MockCTZN(ctznToken).mint(to, tokenAmount);
+    function exactInputSingle(ExactInputSingleParams calldata params) external payable override returns (uint256) {
+        console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+        // Mint some CTZN to simulate swap output
+        uint256 output = params.amountIn * 2; // simulate 1 MATIC = 2 CTZN
+        MockCTZN(tokenOut).mint(params.recipient, output);
+        return output;
     }
 }
+
 
 contract NonPayableFallback {
     fallback() external {}
@@ -72,19 +65,31 @@ contract RevertingReceiver {
     }
 }
 
+contract MockWMATIC is IWMATIC {
+    receive() external payable {}
+
+    function deposit() external payable override {}
+
+    function approve(address, uint256) external pure override returns (bool) {
+        return true;
+    }
+}
+
 contract OnRampSwapperTest is Test {
     OnRampSwapper public swapper;
     MockCTZN public ctzn;
     MockRouter public router;
     address public treasury = address(0xBEEF);
     address public user = address(0xABCD);
+    MockWMATIC public wmatic;
 
     receive() external payable {}
 
     function setUp() public {
         ctzn = new MockCTZN();
         router = new MockRouter(address(ctzn));
-        swapper = new OnRampSwapper(address(router), address(ctzn), treasury);
+        wmatic = new MockWMATIC();
+        swapper = new OnRampSwapper(address(router), address(ctzn), address(wmatic), treasury);
         vm.deal(address(this), 100 ether);
         vm.deal(user, 10 ether);
     }
@@ -93,8 +98,8 @@ contract OnRampSwapperTest is Test {
         assertEq(swapper.ctznToken(), address(ctzn));
         assertEq(swapper.quickswapRouter(), address(router));
         assertEq(swapper.treasuryAddress(), treasury);
+        assertEq(swapper.wmatic(), address(wmatic));
     }
-
     function testOnRampAndSwap() public {
         address recipient = address(0x1234);
         uint256 value = 1 ether;
@@ -137,15 +142,15 @@ contract OnRampSwapperTest is Test {
     }
     
     function testFailConstructorZeroRouter() public {
-    new OnRampSwapper(address(0), address(ctzn), treasury);
+    new OnRampSwapper(address(0), address(ctzn), address(wmatic), treasury);
     }
 
     function testFailConstructorZeroCTZN() public {
-        new OnRampSwapper(address(router), address(0), treasury);
+        new OnRampSwapper(address(router), address(0), address(wmatic), treasury);
     }
 
     function testFailConstructorZeroTreasury() public {
-        new OnRampSwapper(address(router), address(ctzn), address(0));
+        new OnRampSwapper(address(router), address(ctzn), address(wmatic), address(0));
     }
 
 
