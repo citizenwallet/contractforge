@@ -6,12 +6,12 @@ import { Script, console } from "forge-std/Script.sol";
 import { OnRampSwapper } from "../src/OnRampProvider/OnRampSwapper.sol";
 
 contract OnRampSwapperScript is Script {
-	function deploy(address _quickswapRouter, address _ctznToken, address _wmatic,  address _treasuryAddress) public {
+	function deploy(address _quickswapRouter, address _ctznToken, address _wpol,  address _treasuryAddress) public {
 		uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 		address deployerAddress = vm.envAddress("ACCOUNT_ADDRESS");
 		vm.startBroadcast(deployerPrivateKey);
 
-		address implementation = address(new OnRampSwapper(_quickswapRouter, _ctznToken, _wmatic, _treasuryAddress));
+		address implementation = address(new OnRampSwapper(_quickswapRouter, _ctznToken, _wpol, _treasuryAddress));
 
 		console.logAddress(implementation);
 

@@ -65,7 +65,7 @@ contract RevertingReceiver {
     }
 }
 
-contract MockWMATIC is IWMATIC {
+contract MockWPOL is IWPOL {
     receive() external payable {}
 
     function deposit() external payable override {}
@@ -81,15 +81,15 @@ contract OnRampSwapperTest is Test {
     MockRouter public router;
     address public treasury = address(0xBEEF);
     address public user = address(0xABCD);
-    MockWMATIC public wmatic;
+    MockWPOL public wpol;
 
     receive() external payable {}
 
     function setUp() public {
         ctzn = new MockCTZN();
         router = new MockRouter(address(ctzn));
-        wmatic = new MockWMATIC();
-        swapper = new OnRampSwapper(address(router), address(ctzn), address(wmatic), treasury);
+        wpol = new MockWPOL();
+        swapper = new OnRampSwapper(address(router), address(ctzn), address(wpol), treasury);
         vm.deal(address(this), 100 ether);
         vm.deal(user, 10 ether);
     }
@@ -98,7 +98,7 @@ contract OnRampSwapperTest is Test {
         assertEq(swapper.ctznToken(), address(ctzn));
         assertEq(swapper.quickswapRouter(), address(router));
         assertEq(swapper.treasuryAddress(), treasury);
-        assertEq(swapper.wmatic(), address(wmatic));
+        assertEq(swapper.wpol(), address(wpol));
     }
     function testOnRampAndSwap() public {
         address recipient = address(0x1234);
@@ -142,15 +142,15 @@ contract OnRampSwapperTest is Test {
     }
     
     function testFailConstructorZeroRouter() public {
-    new OnRampSwapper(address(0), address(ctzn), address(wmatic), treasury);
+    new OnRampSwapper(address(0), address(ctzn), address(wpol), treasury);
     }
 
     function testFailConstructorZeroCTZN() public {
-        new OnRampSwapper(address(router), address(0), address(wmatic), treasury);
+        new OnRampSwapper(address(router), address(0), address(wpol), treasury);
     }
 
     function testFailConstructorZeroTreasury() public {
-        new OnRampSwapper(address(router), address(ctzn), address(wmatic), address(0));
+        new OnRampSwapper(address(router), address(ctzn), address(wpol), address(0));
     }
 
 

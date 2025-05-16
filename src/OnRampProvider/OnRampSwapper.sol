@@ -19,7 +19,7 @@ interface ISwapRouter {
     function exactInputSingle(ExactInputSingleParams calldata params) external payable returns (uint256 amountOut);
 }
 
-interface IWMATIC {
+interface IWPOL {
     function deposit() external payable;
     function approve(address spender, uint256 amount) external returns (bool);
 }
@@ -27,7 +27,7 @@ interface IWMATIC {
 contract OnRampSwapper is Ownable, ReentrancyGuard {
     address public immutable quickswapRouter;
     address public immutable ctznToken;
-    address public immutable wmatic;
+    address public immutable wpol;
     address public treasuryAddress;
 
     event SwapExecuted(address indexed recipient, uint256 amountPOL, uint256 amountCTZN);
@@ -36,17 +36,17 @@ contract OnRampSwapper is Ownable, ReentrancyGuard {
     constructor(
         address _swapRouter,
         address _ctznToken,
-        address _wmatic,
+        address _wpol,
         address _treasuryAddress
     ) Ownable(msg.sender) {
         require(_swapRouter != address(0), "Invalid router address");
         require(_ctznToken != address(0), "Invalid CTZN address");
-        require(_wmatic != address(0), "Invalid WMATIC address");
+        require(_wpol != address(0), "Invalid WPOL address");
         require(_treasuryAddress != address(0), "Invalid treasury address");
 
         quickswapRouter = _swapRouter;
         ctznToken = _ctznToken;
-        wmatic = _wmatic;
+        wpol = _wpol;
         treasuryAddress = _treasuryAddress;
     }
 
@@ -56,11 +56,11 @@ contract OnRampSwapper is Ownable, ReentrancyGuard {
 
         uint256 amountPOL = msg.value;
 
-        IWMATIC(wmatic).deposit{value: amountPOL}();
-        require(IWMATIC(wmatic).approve(quickswapRouter, amountPOL), "Approve failed");
+        IWPOL(wpol).deposit{value: amountPOL}();
+        require(IWPOL(wpol).approve(quickswapRouter, amountPOL), "Approve failed");
 
         ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
-            tokenIn: wmatic,
+            tokenIn: wpol,
             tokenOut: ctznToken,
             recipient: recipient,
             deadline: block.timestamp + 600,
