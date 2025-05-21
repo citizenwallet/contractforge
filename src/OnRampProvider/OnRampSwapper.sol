@@ -1,96 +1,114 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 interface ISwapRouter {
-    struct ExactInputSingleParams {
-        address tokenIn;
-        address tokenOut;
-        address recipient;
-        uint256 deadline;
-        uint256 amountIn;
-        uint256 amountOutMinimum;
-        uint160 sqrtPriceLimitX96;
-    }
+	struct ExactInputSingleParams {
+		address tokenIn;
+		address tokenOut;
+		address recipient;
+		uint256 deadline;
+		uint256 amountIn;
+		uint256 amountOutMinimum;
+		uint160 sqrtPriceLimitX96;
+	}
 
-    function exactInputSingle(ExactInputSingleParams calldata params) external payable returns (uint256 amountOut);
+	function exactInputSingle(ExactInputSingleParams calldata params) external payable returns (uint256 amountOut);
 }
 
-interface IWMATIC {
-    function deposit() external payable;
-    function approve(address spender, uint256 amount) external returns (bool);
+interface IWPOL {
+	function deposit() external payable;
+	function approve(address spender, uint256 amount) external returns (bool);
 }
 
 contract OnRampSwapper is Ownable, ReentrancyGuard {
-    address public immutable quickswapRouter;
-    address public immutable ctznToken;
-    address public immutable wmatic;
-    address public treasuryAddress;
+	// Custom errors
+	error InvalidRouterAddress();
+	error InvalidCTZNAddress();
+	error InvalidWPOLAddress();
+	error InvalidTreasuryAddress();
+	error NoPOLSent();
+	error InvalidRecipientAddress();
+	error ApproveFailed();
+	error SendingExcessPOLFailed();
+	error NoPOLToWithdraw();
+	error WithdrawFailed();
+	error InsufficientOutputAmount(uint256 actualAmount, uint256 minimumAmount);
 
-    event SwapExecuted(address indexed recipient, uint256 amountPOL, uint256 amountCTZN);
-    event TreasuryAddressUpdated(address indexed newTreasury);
+	address public immutable QUICKSWAP_ROUTER;
+	address public immutable CTZN_TOKEN;
+	address public immutable WPOL;
+	address public treasuryAddress;
 
-    constructor(
-        address _swapRouter,
-        address _ctznToken,
-        address _wmatic,
-        address _treasuryAddress
-    ) Ownable(msg.sender) {
-        require(_swapRouter != address(0), "Invalid router address");
-        require(_ctznToken != address(0), "Invalid CTZN address");
-        require(_wmatic != address(0), "Invalid WMATIC address");
-        require(_treasuryAddress != address(0), "Invalid treasury address");
+	event SwapExecuted(address indexed recipient, uint256 amountPOL, uint256 amountCTZN);
+	event TreasuryAddressUpdated(address indexed newTreasury);
+	event TreasuryChanged(address indexed oldTreasury, address indexed newTreasury);
 
-        quickswapRouter = _swapRouter;
-        ctznToken = _ctznToken;
-        wmatic = _wmatic;
-        treasuryAddress = _treasuryAddress;
-    }
+	constructor(address _swapRouter, address _ctznToken, address _wpol, address _treasuryAddress) Ownable(msg.sender) {
+		if (_swapRouter == address(0)) revert InvalidRouterAddress();
+		if (_ctznToken == address(0)) revert InvalidCTZNAddress();
+		if (_wpol == address(0)) revert InvalidWPOLAddress();
+		if (_treasuryAddress == address(0)) revert InvalidTreasuryAddress();
 
-    function onRampAndSwap(address recipient, uint256 amountOutMin) external payable nonReentrant {
-        require(msg.value > 0, "No MATIC sent");
-        require(recipient != address(0), "Invalid recipient address");
+		QUICKSWAP_ROUTER = _swapRouter;
+		CTZN_TOKEN = _ctznToken;
+		WPOL = _wpol;
+		treasuryAddress = _treasuryAddress;
+	}
 
-        uint256 amountPOL = msg.value;
+	function onRampAndSwap(address recipient, uint256 amountOutMin) external payable nonReentrant {
+		if (msg.value == 0) revert NoPOLSent();
+		if (recipient == address(0)) revert InvalidRecipientAddress();
 
-        IWMATIC(wmatic).deposit{value: amountPOL}();
-        require(IWMATIC(wmatic).approve(quickswapRouter, amountPOL), "Approve failed");
+		uint256 amountPOL = msg.value;
 
-        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
-            tokenIn: wmatic,
-            tokenOut: ctznToken,
-            recipient: recipient,
-            deadline: block.timestamp + 600,
-            amountIn: amountPOL,
-            amountOutMinimum: amountOutMin,
-            sqrtPriceLimitX96: 0
-        });
+		IWPOL(WPOL).deposit{ value: amountPOL }();
+		if (!IWPOL(WPOL).approve(QUICKSWAP_ROUTER, amountPOL)) revert ApproveFailed();
 
-        uint256 amountOut = ISwapRouter(quickswapRouter).exactInputSingle(params);
-        emit SwapExecuted(recipient, amountPOL, amountOut);
+		ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
+			tokenIn: WPOL,
+			tokenOut: CTZN_TOKEN,
+			recipient: recipient,
+			deadline: block.timestamp + 600,
+			amountIn: amountPOL,
+			amountOutMinimum: amountOutMin,
+			sqrtPriceLimitX96: 0
+		});
 
-        uint256 excess = address(this).balance;
-        if (excess > 0) {
-            (bool success, ) = treasuryAddress.call{value: excess}("");
-            require(success, "Sending excess MATIC failed");
-        }
-    }
+		uint256 amountOut = ISwapRouter(QUICKSWAP_ROUTER).exactInputSingle(params);
+		
+		// Add slippage protection check
+		if (amountOut < amountOutMin) revert InsufficientOutputAmount(amountOut, amountOutMin);
+		
+		// Reset approval to 0 after swap
+		if (!IWPOL(WPOL).approve(QUICKSWAP_ROUTER, 0)) revert ApproveFailed();
+		
+		emit SwapExecuted(recipient, amountPOL, amountOut);
 
-    function updateTreasuryAddress(address _newTreasury) external onlyOwner {
-        require(_newTreasury != address(0), "Invalid treasury address");
-        treasuryAddress = _newTreasury;
-        emit TreasuryAddressUpdated(_newTreasury);
-    }
+		// Calculate excess after the swap is completed
+		uint256 excess = address(this).balance;
+		if (excess > 0) {
+			(bool success, ) = treasuryAddress.call{ value: excess }("");
+			if (!success) revert SendingExcessPOLFailed();
+		}
+	}
 
-    function emergencyWithdraw() external onlyOwner {
-        uint256 balance = address(this).balance;
-        require(balance > 0, "No MATIC to withdraw");
-        (bool success, ) = owner().call{value: balance}("");
-        require(success, "Withdraw failed");
-    }
+	function updateTreasuryAddress(address _newTreasury) external onlyOwner {
+		if (_newTreasury == address(0)) revert InvalidTreasuryAddress();
+		address oldTreasury = treasuryAddress;
+		treasuryAddress = _newTreasury;
+		emit TreasuryAddressUpdated(_newTreasury);
+		emit TreasuryChanged(oldTreasury, _newTreasury);
+	}
 
-    receive() external payable {}
+	function emergencyWithdraw() external onlyOwner {
+		uint256 balance = address(this).balance;
+		if (balance == 0) revert NoPOLToWithdraw();
+		(bool success, ) = owner().call{ value: balance }("");
+		if (!success) revert WithdrawFailed();
+	}
+
+	receive() external payable nonReentrant {}
 }
