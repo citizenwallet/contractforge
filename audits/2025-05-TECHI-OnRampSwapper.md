@@ -12,10 +12,12 @@ Audit date: 21 May 2025
 
 ## 1. Scope & Files Reviewed
 
-File	SLOC	Notes
-src/OnRampProvider/OnRampSwapper.sol	120 (flattened)	Main logic
-src/OnRampProvider/IUniswapV2Router02.sol	11	Interface stub – unused
-script/OnRampSwapper.s.sol	20	Deployment helper
+| File | SLOC | Notes |
+|------|------|-------|
+| src/OnRampProvider/OnRampSwapper.sol | 120 (flattened) | Main logic |
+| src/OnRampProvider/IUniswapV2Router02.sol | 11 | Interface stub – unused |
+| script/OnRampSwapper.s.sol | 20 | Deployment helper |
+
 Related README excerpt	n/a	Usage instructions  ￼
 
 Testing code (test/OnRampSwapper.t.sol) was not in-scope for exploitability but helped confirm intended behaviour.
@@ -38,14 +40,15 @@ OnRampSwapper enables anybody to send native POL, wrap it into WPOL, and atomica
 
 ## 4. Summary of Findings
 
-ID	Severity	Title
-H-01	High	No ERC-20 rescue function (loss of mistakenly sent tokens)
-M-01	Medium	treasuryAddress.call failure reverts the whole swap
-L-01	Low	Hard-coded 0.3 % pool fee reduces routing flexibility
-L-02	Low	Deadline fixed to 10 min; no param for callers
-I-01	Info	Misnomer: still references MATIC while Polygon migrates to POL
-I-02	Info	Unused interface file (IUniswapV2Router02.sol)
-G-01	Gas	Re-approving WPOL on every call
+| ID | Severity | Title |
+|----|----------|-------|
+| H-01 | High | No ERC-20 rescue function (loss of mistakenly sent tokens) |
+| M-01 | Medium | treasuryAddress.call failure reverts the whole swap |
+| L-01 | Low | Hard-coded 0.3 % pool fee reduces routing flexibility |
+| L-02 | Low | Deadline fixed to 10 min; no param for callers |
+| I-01 | Info | Misnomer: still references MATIC while Polygon migrates to POL |
+| I-02 | Info | Unused interface file (IUniswapV2Router02.sol) |
+| G-01 | Gas | Re-approving WPOL on every call |
 
 No critical-severity issues were identified.
 
@@ -62,7 +65,7 @@ Recommendation: Add an emergencyWithdrawToken(address token, uint256 amount) res
 
 ### M-01  Treasury forward can revert entire swap
 
-If address(this).balance > 0 after the swap and treasuryAddress is a contract whose fallback reverts, the whole transaction reverts, undoing the user’s swap and wasting gas.
+If address(this).balance > 0 after the swap and treasuryAddress is a contract whose fallback reverts, the whole transaction reverts, undoing the user's swap and wasting gas.
 Recommendation: Use a try/catch pattern or rely on sendValue (OpenZeppelin Address library) with a non-reverting branch that logs the failure instead of require(success).
 
 ⸻
@@ -77,7 +80,7 @@ Some integrators may need tighter or looser windows. Consider accepting uint32 d
 
 ### I-01  POL/MATIC terminology
 
-Polygon’s native asset has begun rebranding to POL. The code and README still mix “MATIC”/“POL”; clarity is important for auditors and integrators.
+Polygon's native asset has begun rebranding to POL. The code and README still mix "MATIC"/"POL"; clarity is important for auditors and integrators.
 
 ### I-02  Unused interface file
 
@@ -87,9 +90,10 @@ IUniswapV2Router02.sol is committed but not imported anywhere. Remove to avoid c
 
 ## 6. Gas & Code-quality Notes
 
-ID	Type	Impact
-G-01	Storage	Removing per-call approve saves ~5 600 gas/call
-G-02	View	Mark treasuryAddress immutable if it will never change, or else make quickswapRouter, ctznToken, and WPOL constant/immutable for cheaper access
+| ID | Type | Impact |
+|----|------|--------|
+| G-01 | Storage | Removing per-call approve saves ~5 600 gas/call |
+| G-02 | View | Mark treasuryAddress immutable if it will never change, or else make quickswapRouter, ctznToken, and WPOL constant/immutable for cheaper access |
 
 Miscellaneous:
 	•	Put blank lines & NatSpec headings for readability.
@@ -111,12 +115,12 @@ Unit tests are present but were not executed in this audit environment. Ensure c
 
 The contract is simple and leverages well-tested primitives (WPOL, Uniswap V3 router, OpenZeppelin). No logic bugs that lead to fund loss for correct usage were observed. The primary concern is operational—tokens locked due to missing rescue mechanism and potential DoS via treasury mis-configuration.
 
-Category	Rating
-Security	Low-to-Moderate risk
-Code Quality	Good (minor style issues)
-Maintainability	Good
-Documentation	Adequate (README snippet)
-
+| Category | Rating |
+|----------|--------|
+| Security | Low-to-Moderate risk |
+| Code Quality | Good (minor style issues) |
+| Maintainability | Good |
+| Documentation | Adequate (README snippet) |
 
 ⸻
 
