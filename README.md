@@ -126,7 +126,5 @@ $ forge script script/upgrade/UpgradeSessionManagerModule.s.sol:UpgradeSessionMa
 
 # Swapper
 ```shell
-$ forge script script/OnRampSwapper.s.sol:OnRampSwapperScript --sig "deploy(address,address,address)" 0xCB9bD5aCD627e8FcCf9EB8d4ba72AEb1Cd8Ff5EF 0x14196F08a4Fa0B66B7331bC40dd6bCd8A1dEeA9F 0x2d900678a66df705D3F3184267eAf603d809d3c4 --rpc-url $POLYGON_AMOY_RPC_URL --etherscan-api-key $POLYGON_AMOY_ETHERSCAN_API_KEY --verify --verifier-url $POLYGON_AMOY_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
-
-$ forge script script/OnRampSwapper.s.sol:OnRampSwapperScript --sig "deploy(address,address,address,address)" 0xf5b509bB0909a69B1c207E495f687a596C168E12 0x0D9B0790E97e3426C161580dF4Ee853E4A7C4607 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270 0xA232F16aB37C9a646f91Ba901E92Ed1Ba4B7b544  --rpc-url $POLYGON_RPC_URL --etherscan-api-key $POLYGON_ETHERSCAN_API_KEY --verify --verifier-url $POLYGON_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
+$ forge script script/OnRampSwapper.s.sol:OnRampSwapperScript --sig "deploy(address,address,address,address)" 0xf5b509bB0909a69B1c207E495f687a596C168E12 0x0D9B0790E97e3426C161580dF4Ee853E4A7C4607 0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270 0xA232F16aB37C9a646f91Ba901E92Ed1Ba4B7b544 --rpc-url $POLYGON_MAINNET_RPC_URL --etherscan-api-key $POLYGON_MAINNET_ETHERSCAN_API_KEY --verify --verifier-url $POLYGON_ETHERSCAN_VERIFIER_URL --private-key $PRIVATE_KEY 
 ```
