@@ -140,7 +140,7 @@ contract DeploymentScript is NetworkUtilsScript {
 			1, // threshold
 			address(0),
 			"",
-			SafeSuiteLib.SAFE_TokenCallbackHandler_ADDRESS,
+			SafeSuiteLib.SAFE_CompatibilityFallbackHandler_ADDRESS,
 			address(0),
 			0,
 			address(0)

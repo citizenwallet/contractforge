@@ -107,18 +107,18 @@ contract AccountFactory is SafeProxyFactory {
 		bytes memory enableModuleData = abi.encodeCall(this.enableModules, (_safe, modules));
 
 		// Prepare safe initializer data
-		bytes memory safeInitializer = abi.encodeWithSelector(
-			Safe.setup.selector,
-			owners,
-			1, // threshold
-			address(this), // to
-			enableModuleData, // data
-			// address(0), // to
-			// "", // data
-			SafeSuiteLib.SAFE_CompatibilityFallbackHandler_ADDRESS, // fallbackHandler
-			address(0), // paymentToken
-			0, // payment
-			address(0) // paymentReceiver
+		bytes memory safeInitializer = abi.encodeCall(
+			Safe.setup,
+			(
+				owners,
+				1, // threshold
+				address(this), // to
+				enableModuleData, // data
+				SafeSuiteLib.SAFE_CompatibilityFallbackHandler_ADDRESS, // fallbackHandler
+				address(0), // paymentToken
+				0, // payment
+				payable(address(0)) // paymentReceiver
+			) 
 		);
 		return safeInitializer;
 	}
