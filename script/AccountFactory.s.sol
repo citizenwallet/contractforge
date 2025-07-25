@@ -31,7 +31,7 @@ contract AccountFactoryScript is Script {
 			abi.encode(_communityModule)
 		);
 
-		bytes32 salt = keccak256(abi.encodePacked("SAFE_ACCOUNT_FACTORY_26-11-2024"));
+		bytes32 salt = keccak256(abi.encodePacked("SAFE_ACCOUNT_FACTORY_05/06/2025"));
 
 		// Deploy the contract using Create2
 		address accountFactoryAddress = create2Deployer.deploy(salt, contractBytecode);
