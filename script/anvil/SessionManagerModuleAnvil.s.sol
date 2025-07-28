@@ -53,7 +53,7 @@ contract SessionManagerModuleAnvilScript is Script {
 
 		CommunityAndPaymasterModuleScript communityModuleScript = new CommunityAndPaymasterModuleScript();
 
-		(CommunityModule communityModule, Paymaster paymaster) = communityModuleScript.deploy(whitelist);
+		(CommunityModule communityModule, Paymaster paymaster) = communityModuleScript.deploy(deployer, whitelist);
 
 		AccountFactoryScript accountFactoryScript = new AccountFactoryScript();
 		AccountFactory accountFactory = accountFactoryScript.deploy(address(communityModule));

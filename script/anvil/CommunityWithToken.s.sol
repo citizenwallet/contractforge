@@ -33,7 +33,7 @@ contract CommunityWithTokenScript is Script {
 
         CommunityAndPaymasterModuleScript communityAndPaymasterModuleScript = new CommunityAndPaymasterModuleScript();
 
-        (CommunityModule communityModule, Paymaster paymaster) = communityAndPaymasterModuleScript.deploy(whitelist);
+        (CommunityModule communityModule, Paymaster paymaster) = communityAndPaymasterModuleScript.deploy(deployer, whitelist);
 
 		AccountFactoryScript accountFactoryScript = new AccountFactoryScript();
 		AccountFactory accountFactory = accountFactoryScript.deploy(address(communityModule));

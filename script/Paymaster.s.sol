@@ -9,7 +9,7 @@ import { Create2 } from "../src/Create2/Create2.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract PaymasterDeploy is Script {
-	function deploy(address sponsor, address[] calldata addresses) external {
+	function deploy(address owner, address sponsor, address[] calldata addresses) external {
 		uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
 		vm.startBroadcast(deployerPrivateKey);
@@ -23,7 +23,7 @@ contract PaymasterDeploy is Script {
 		Paymaster implementation = new Paymaster();
 
 		// Prepare initialization data
-		bytes memory initData = abi.encodeCall(Paymaster.initialize, (sponsor, addresses));
+		bytes memory initData = abi.encodeCall(Paymaster.initialize, (owner,sponsor, addresses));
 
 		// Prepare the creation code for the proxy
 		bytes memory proxyBytecode = abi.encodePacked(

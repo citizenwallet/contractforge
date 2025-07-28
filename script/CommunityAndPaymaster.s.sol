@@ -13,7 +13,7 @@ import { Paymaster } from "../src/Modules/Community/Paymaster.sol";
 import { Create2 } from "../src/Create2/Create2.sol";
 
 contract CommunityAndPaymasterModuleScript is Script {
-	function deploy(address[] calldata addresses) public returns (CommunityModule, Paymaster) {
+	function deploy(address owner, address[] calldata addresses) public returns (CommunityModule, Paymaster) {
 		uint256 deployerPrivateKey = isAnvil()
 			? 77_814_517_325_470_205_911_140_941_194_401_928_579_557_062_014_761_831_930_645_393_041_380_819_009_408
 			: vm.envUint("PRIVATE_KEY");
@@ -38,13 +38,10 @@ contract CommunityAndPaymasterModuleScript is Script {
 		// Deploy the implementation contract
 		CommunityModule communityImplementation = new CommunityModule(INonceManager(entryPoint));
 
-		// Prepare initialization data
-		bytes memory initData = abi.encodeCall(CommunityModule.initialize, (deployer));
-
 		// Prepare the creation code for the proxy
 		bytes memory proxyBytecode = abi.encodePacked(
 			type(ERC1967Proxy).creationCode,
-			abi.encode(address(communityImplementation), initData)
+			abi.encode(address(communityImplementation), abi.encodeCall(CommunityModule.initialize, (deployer)))
 		);
 
 		bytes32 salt = keccak256(abi.encodePacked("SAFE_COMMUNITY_MODULE_23-10-2024"));
@@ -63,7 +60,7 @@ contract CommunityAndPaymasterModuleScript is Script {
 
 		address paymasterImplementation = address(new Paymaster());
 
-		bytes memory data = abi.encodeCall(Paymaster.initialize, (deployer, addresses));
+		bytes memory data = abi.encodeCall(Paymaster.initialize, (owner, deployer, addresses));
 		address paymasterProxy = address(new ERC1967Proxy(paymasterImplementation, data));
 
 		vm.stopBroadcast();

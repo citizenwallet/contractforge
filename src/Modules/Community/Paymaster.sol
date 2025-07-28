@@ -39,8 +39,8 @@ contract Paymaster is
 
     uint256 private constant SIGNATURE_OFFSET = 84;
 
-    function initialize(address aSponsor, address[] calldata addresses) public virtual initializer {
-        __Ownable_init(aSponsor);
+    function initialize(address owner, address aSponsor, address[] calldata addresses) public virtual initializer {
+        __Ownable_init(owner);
         __Whitelist_init(addresses);
 
         _initialize(aSponsor);

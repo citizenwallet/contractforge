@@ -85,7 +85,7 @@ contract CardManagerModuleTest is Test {
 		whitelistedAddresses[0] = address(token);
 
 		CommunityAndPaymasterModuleScript communityAndPaymasterModuleScript = new CommunityAndPaymasterModuleScript();
-		(communityModule, paymaster) = communityAndPaymasterModuleScript.deploy(whitelistedAddresses);
+		(communityModule, paymaster) = communityAndPaymasterModuleScript.deploy(owner, whitelistedAddresses);
 
 		// Deploy the account factory
 		AccountFactoryScript accountFactoryScript = new AccountFactoryScript();
